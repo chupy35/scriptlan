@@ -1,7 +1,6 @@
 https://www.unitec.mx/alumnos
 https://www.unitec.mx/exalumnos
 https://www.unitec.mx/profesores
-javascript://void(0);
 https://www.unitec.mx
 https://www.unitec.mx/
 https://www.unitec.mx/conoce-la-universidad/
@@ -54,7 +53,6 @@ https://www.unitec.mx/profesores/
 https://www.unitec.mx/exalumnos/
 https://www.unitec.mx/licenciatura-en-criminologia/
 https://www.facebook.com/sharer/sharer.php
-fb-messenger://share/
 https://wa.me/
 https://www.unitec.mx/licenciatura-en-lenguas-extranjeras/
 https://www.unitec.mx/licenciatura-en-diseno-de-modas/
