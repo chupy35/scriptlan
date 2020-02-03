@@ -34,6 +34,10 @@ def get_all_links(url):
         parsed_href = urlparse(href)
         # remove URL GET parameters, URL fragments, etc.
         href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
+        if "javascript" in str(href):
+            continue
+        if  "http" not in str(href[0:4]):
+            continue
         if not validate_link(href):
             # not a valid URL
             continue
