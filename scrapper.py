@@ -4,7 +4,8 @@ from bs4 import BeautifulSoup
 import argparse
 
 # initialize the set of links (unique links)
-urls = set()
+urls = []
+count_urls = 0
 
 def validate_link(url):
     """
@@ -19,7 +20,7 @@ def get_all_links(url):
     Returns all URLs that is found on `url` in which it belongs to the same website
     """
     # all URLs of `url`
-    urls = set()
+    #urls = set()
     # domain name of the URL without the protocol
     domain_name = urlparse(url).netloc
     soup = BeautifulSoup(requests.get(url).content, "html.parser")
@@ -41,30 +42,36 @@ def get_all_links(url):
             continue
         if domain_name not in href:
             # external link
-            print("External link")
-            urls.add(href)
+            print("Link: ")
+            print(href)
+            urls.append(href)
             continue
-        print("Internal Link")
-        urls.add(href)
+        print("Link: ")
+        urls.append(href)
+        print(href)
     return urls
 
-parser = argparse.ArgumentParser(description="Link Extractor Tool with Python")
-parser.add_argument("url", help="The URL to extract links from.")
-parser.add_argument("-m", "--max-urls", help="Number of max URLs to crawl, default is 30.", default=30, type=int)
-args = parser.parse_args()
-url = ""
+
+def geturls(url):
+    global count_urls
+    count_urls += 1
+    links = get_all_links(url)
+    for link in links:
+        if count_urls > max_urls:
+            break
+        geturls(link)
+
+url = "https://www.unitec.mx/"
 max_urls = 50
 
-global total_urls_visited
-total_urls_visited += 1
-links = get_all_website_links(url)
-for link in links:
-    if total_urls_visited > max_urls:
-        break
-    crawl(link, max_urls=max_urls)
+geturls(url)
 domain_name = urlparse(url).netloc
 
 print("Number of urls taken")
 print(len(urls))
 print("URLS:")
 print(urls)
+
+with open(f"{domain_name}_links.txt", "w") as f:
+    for internal_link in urls:
+        print(internal_link.strip(), file=f)
