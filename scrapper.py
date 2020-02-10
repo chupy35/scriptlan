@@ -21,6 +21,7 @@ def get_all_links(url):
     # domain name of the URL without the protocol
     domain_name = urlparse(url).netloc
     soup = BeautifulSoup(requests.get(url).content, "html.parser")
+    print ("soup: ", soup)
     for a_tag in soup.findAll("a") or soup.findAll("area") or soup.findAll("base") or soup.findAll("link"):
         href = a_tag.attrs.get("href")
         if href == "" or href is None:
