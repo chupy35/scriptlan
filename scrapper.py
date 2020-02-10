@@ -5,8 +5,6 @@ import sys
 
 # initialize the set of links (unique links)
 urls = set()
-count_urls = 0
-max_urls = 50
 
 def validate_link(url):
     """
@@ -18,7 +16,7 @@ def validate_link(url):
 
 def get_all_links(url):
     """
-    Returns all URLs that is found on `url` in which it belongs to the same website
+    Returns all URLs that are found in a page
     """
     # domain name of the URL without the protocol
     domain_name = urlparse(url).netloc
@@ -44,7 +42,6 @@ def get_all_links(url):
             # already in the set
             continue
         if domain_name not in href:
-            # external link
             print("Link: ")
             print(href)
             urls.add(href)
@@ -56,15 +53,12 @@ def get_all_links(url):
 
 
 def geturls(url):
-    global count_urls
-    count_urls += 1
+    """
+    Gets all the urls in the page and the urls inside it
+    """
     links = get_all_links(url)
     for link in links:
-        if count_urls > max_urls:
-            break
         geturls(link)
-
-
 
 
 if __name__ == '__main__':
