@@ -1,11 +1,12 @@
 import requests
 from urllib.request import urlparse, urljoin
 from bs4 import BeautifulSoup
-import argparse
+import sys
 
 # initialize the set of links (unique links)
 urls = set()
 count_urls = 0
+max_urls = 50
 
 def validate_link(url):
     """
@@ -63,17 +64,21 @@ def geturls(url):
             break
         geturls(link)
 
-url = "https://www.unitec.mx/"
-max_urls = 50
 
-geturls(url)
-domain_name = urlparse(url).netloc
 
-print("Number of urls taken")
-print(len(urls))
-print("URLS:")
-print(urls)
 
-with open(f"{domain_name}_links.txt", "w") as f:
-    for internal_link in urls:
-        print(internal_link.strip(), file=f)
+if __name__ == '__main__':
+    url = sys.argv[2]
+    print(url)
+    # url = "https://www.unitec.mx/"
+    geturls(url)
+    domain_name = urlparse(url).netloc
+
+    print("Number of urls taken")
+    print(len(urls))
+    print("URLS:")
+    print(urls)
+
+    with open(f"{domain_name}_links.txt", "w") as f:
+        for internal_link in urls:
+            print(internal_link.strip(), file=f)
