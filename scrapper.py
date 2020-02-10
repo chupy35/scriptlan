@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import argparse
 
 # initialize the set of links (unique links)
-urls = []
+urls = set()
 count_urls = 0
 
 def validate_link(url):
@@ -19,8 +19,6 @@ def get_all_links(url):
     """
     Returns all URLs that is found on `url` in which it belongs to the same website
     """
-    # all URLs of `url`
-    #urls = set()
     # domain name of the URL without the protocol
     domain_name = urlparse(url).netloc
     soup = BeautifulSoup(requests.get(url).content, "html.parser")
@@ -48,10 +46,10 @@ def get_all_links(url):
             # external link
             print("Link: ")
             print(href)
-            urls.append(href)
+            urls.add(href)
             continue
         print("Link: ")
-        urls.append(href)
+        urls.add(href)
         print(href)
     return urls
 
