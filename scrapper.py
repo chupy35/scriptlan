@@ -2,31 +2,29 @@
 TP1 - Scripting Languages - INF8007
 Polytechnique Montréal
 
-Students: 
-    Isabella Ferreira
-    Javier Rosales Tovar
-    Xiaowei Chen  
+Students:
+Isabella Ferreira
+Javier Rosales Tovar
+Xiaowei Chen
 """
 
-import requests
 from urllib.request import urlparse, urljoin
-from bs4 import BeautifulSoup
 import sys
 import re
+from bs4 import BeautifulSoup
+import requests
 
 # Initialize the set of unique links
-urls = set()
+URLS = set()
 
-"""
-Checks whether url is a valid URL.
-"""
+
+# Checks whether url is a valid URL.
 def validate_link(url):
     parsed = urlparse(url)
     return bool(parsed.netloc), bool(parsed.scheme)
 
-"""
-Returns all URLs that are found in a page
-"""
+
+# Returns all URLs that are found in a page
 def get_all_links(url):
 
     # Pattern to match URLs
@@ -45,13 +43,12 @@ def get_all_links(url):
 
         if href == "" or href is None:  # href empty tag. Test if it's in a text
             if url_pattern.match(str(a_tag)):
-                urls.add(a_tag)
+                URLS.add(a_tag)
                 print(">>>>>>>>> IT MATCHES STRING TEXT: ", a_tag)
                 print("Link: ", a_tag)
             else:
                 continue
-        
-        # Join the URL if it's relative LINK (not absolute link)
+        # Join the URL if it's relative link (not absolute link)
         href = urljoin(url, href)
         parsed_href = urlparse(href)
 
@@ -63,37 +60,36 @@ def get_all_links(url):
             continue
         if not validate_link(href):
             continue            # not a valid URL
-        if href in urls:
+        if href in URLS:
             continue        # already in the set - avoid checking duplicated URLs
         if domain_name not in href:
             print("Link: ", href)
-            urls.add(href)
+            URLS.add(href)
             continue
-        urls.add(href)
+        URLS.add(href)
         print("Link: ", href)
-    return urls
+    return URLS
 
-"""
-Gets all the urls in the page and the urls inside it
-"""
+
+# Gets all the urls in the page and the urls inside it
 def geturls(url, domain_name):
     links = get_all_links(url)
-    for link in links:
+    for link in links:  # Check sub-links recursively
         if domain_name in link:  # Check if we are analyzing URLs from the same website domain
             geturls(link, domain_name)
 
 if __name__ == '__main__':
-    url = sys.argv[2]
-    domain_name = urlparse(url).netloc
-    print(url)
-    geturls(url, domain_name)
+    URL = sys.argv[2]
+    DOMAIN_NAME = urlparse(URL).netloc
+    print(URL)
+    geturls(URL, DOMAIN_NAME)
 
     print("Number of URLS:")
-    print(len(urls))
+    print(len(URLS))
     print("URLS:")
-    print(urls)
+    print(URLS)
 
     # Save output with found links
-    with open(f"{domain_name}_links.txt", "w") as f:
-        for internal_link in urls:
+    with open(f"{DOMAIN_NAME}_links.txt", "w") as f:
+        for internal_link in URLS:
             print(internal_link.strip(), file=f)
