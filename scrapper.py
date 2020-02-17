@@ -1,6 +1,6 @@
 """
 TP1 - Scripting Languages - INF8007
-Polytechnique Montréal
+Polytechnique Montreal
 
 Students:
 Isabella Ferreira
@@ -19,6 +19,7 @@ sys.setrecursionlimit(3000)
 # Initialize the set of unique links
 URLS = set()
 
+sys.setrecursionlimit(1500)
 
 # Checks whether url is a valid URL.
 def validate_link(url):
@@ -75,10 +76,11 @@ def get_all_links(url):
 
 # Gets all the urls in the page and the urls inside it
 def geturls(url, domain_name):
+
     links = get_all_links(url)
     for link in links:  # Check sub-links recursively
-        if domain_name in link:  # Check if we are analyzing URLs from the same website domain
-            geturls(link, domain_name)
+        #if domain_name in link:  # Check if we are analyzing URLs from the same website domain
+        geturls(link, domain_name)
 
 if __name__ == '__main__':
     URL = sys.argv[2]
