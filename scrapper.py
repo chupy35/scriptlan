@@ -7,19 +7,18 @@ import re
 # initialize the set of links (unique links)
 urls = set()
 
+"""
+Checks whether `url` is a valid URL.
+"""
 def validate_link(url):
-    """
-    Checks whether `url` is a valid URL.
-    """
+    
     parsed = urlparse(url)
     return bool(parsed.netloc) and bool(parsed.scheme)
 
-
+"""
+Returns all URLs that are found in a page
+"""
 def get_all_links(url):
-    """
-    Returns all URLs that are found in a page
-    """
-
     url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+] |[!*\(\), ]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
 
     # domain name of the URL without the protocol
@@ -64,21 +63,23 @@ def get_all_links(url):
         print("Link: ", href)
     return urls
 
-
-def geturls(url):
-    """
-    Gets all the urls in the page and the urls inside it
-    """
+"""
+Gets all the urls in the page and the urls inside it
+"""
+def geturls(url, domain_name):
     links = get_all_links(url)
+    print (">>> links: ", links)
     for link in links:
-        geturls(link)
-
+        if domain_name in url:  # check if we are analyzing urls from the same domain
+            print(">>> DOMAIN NAME: ", domain_name)
+            print(">>> LINK: ", link)
+        geturls(link, domain_name)
 
 if __name__ == '__main__':
     url = sys.argv[2]
-    print(url)
-    geturls(url)
     domain_name = urlparse(url).netloc
+    print(url)
+    geturls(url, domain_name)
 
     print("Number of URLS:")
     print(len(urls))
