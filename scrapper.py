@@ -14,8 +14,6 @@ import re
 from bs4 import BeautifulSoup
 import requests
 
-sys.setrecursionlimit(3000)
-
 # Initialize the set of unique links
 URLS = set()
 
