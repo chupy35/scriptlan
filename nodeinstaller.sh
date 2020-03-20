@@ -6,11 +6,10 @@
 #	- le script bash doit partir le serveur node localement (npm start) en spécifiant le port (la variable d'environnement se nomme PORT)
 # - le script bash doit exécuter votre programme sur le serveur node local (http://localhost) en vérifiant le bon port.
 github=
-port=3000
+#port=3000
 
 process_petition() {
-    git clone $1 && cd "$(basename "$1" .git)" && npm install && $ npm start -- --port $2
-    echo $gitclone
+    git clone $1 && cd "$(basename "$1" .git)" && npm install && npm start -- --port $2
 }
 
 for arg in "$@"
@@ -30,9 +29,10 @@ do
             echo "please use nodeinstaller.sh -g [url] to specify a git repository"
         else
             github=$2
-            echo "github repository: $github"
-            process_petition $github $port
         fi
     fi
 done
+
+echo "github repository: $github and port: $port"
+process_petition $github $port
 
