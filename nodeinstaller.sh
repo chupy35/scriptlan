@@ -20,9 +20,15 @@ process_petition() {
     else
       echo "$repo_folder"
     fi
-    cd "$repo_folder" && npm install && npm start -- --port $2
 
+    trap "kill 0" EXIT
 
+    cd "$repo_folder" && npm install && npm start -- --port $2 &
+    sleep 2
+
+    localhost_url="http://localhost:$2"
+    python3 "scrapper.py" -u "$localhost_url"
+#    wait
 }
 
 for arg in "$@"
