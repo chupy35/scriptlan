@@ -5,6 +5,8 @@
 #	- le script bash doit cloner le git, installer les dépendence node (npm install)
 #	- le script bash doit partir le serveur node localement (npm start) en spécifiant le port (la variable d'environnement se nomme PORT)
 # - le script bash doit exécuter votre programme sur le serveur node local (http://localhost) en vérifiant le bon port.
+# - provide a node repo: https://github.com/tjmonsi/simple-node-server.git
+
 github=""
 #port=3000
 
