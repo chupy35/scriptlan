@@ -9,15 +9,20 @@ github=""
 #port=3000
 
 process_petition() {
-    repofolder="$(basename "$1" .git)"
+    # install python dependency
+    pip3 install -r requirements.txt
+
+    repo_folder="$(basename "$1" .git)"
     # check if git repository already exist
-    if [ ! -d "$repofolder" ];
+    if [ ! -d "$repo_folder" ];
     then
       git clone $1
     else
-      echo "$repofolder"
+      echo "$repo_folder"
     fi
-    cd "$repofolder" && npm install && npm start -- --port $2
+    cd "$repo_folder" && npm install && npm start -- --port $2
+
+
 }
 
 for arg in "$@"
