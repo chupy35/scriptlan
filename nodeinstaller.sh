@@ -5,11 +5,19 @@
 #	- le script bash doit cloner le git, installer les dépendence node (npm install)
 #	- le script bash doit partir le serveur node localement (npm start) en spécifiant le port (la variable d'environnement se nomme PORT)
 # - le script bash doit exécuter votre programme sur le serveur node local (http://localhost) en vérifiant le bon port.
-github=
+github=""
 #port=3000
 
 process_petition() {
-    git clone $1 && cd "$(basename "$1" .git)" && npm install && npm start -- --port $2
+    repofolder="$(basename "$1" .git)"
+    # check if git repository already exist
+    if [ ! -d "$repofolder" ];
+    then
+      git clone $1
+    else
+      echo "$repofolder"
+    fi
+    cd "$repofolder" && npm install && npm start -- --port $2
 }
 
 for arg in "$@"
