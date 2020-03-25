@@ -10,6 +10,9 @@
 github=""
 #port=3000
 
+help_msg="nodeinstaller.sh -g [github repository] -p [port]"
+lack_git_url_msg="please use nodeinstaller.sh -g [url] to specify a git repository"
+
 process_petition() {
     # install python dependency
     pip3 install -r requirements.txt
@@ -25,9 +28,12 @@ process_petition() {
 
     trap "kill 0" EXIT
 
-    cd "$repo_folder" && npm install && npm start -- --port $2 &
+    cd "$repo_folder"
+    npm install
+    npm start -- --port $2 &
     sleep 2
 
+    cd ..
     localhost_url="http://localhost:$2"
     python3 "scrapper.py" -u "$localhost_url"
 #    wait
@@ -37,7 +43,7 @@ for arg in "$@"
 do
     if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]
     then
-        echo "nodeinstaller.sh -g [github repository] -p [port]"
+        echo "$help_msg"
     fi
     if [ "$arg" == "--port" ] || [ "$arg" == "-p" ]
     then
@@ -47,7 +53,7 @@ do
     then
         if [ "$2" == ""  ]
          then
-            echo "please use nodeinstaller.sh -g [url] to specify a git repository"
+            echo "lack_git_url_msg"
         else
             github=$2
         fi
