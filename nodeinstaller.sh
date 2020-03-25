@@ -53,7 +53,7 @@ do
     then
         if [ "$2" == ""  ]
          then
-            echo "lack_git_url_msg"
+            echo "$lack_git_url_msg"
         else
             github=$2
         fi
