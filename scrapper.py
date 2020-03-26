@@ -38,26 +38,19 @@ def get_all_links(url):
     soup = BeautifulSoup(requests.get(url).content, "html.parser")
 
     # Checking for html tags that contain link and text
-    for a_tag in soup.findAll("a") or soup.findAll("area") or soup.findAll("base") or soup.findAll("link") or soup.findAll("b") or soup.findAll("strong") or soup.findAll("i") or soup.findAll("em") or soup.findAll("mark") or soup.findAll("small") or soup.findAll("del") or soup.findAll("ins") or soup.findAll("sub") or soup.findAll("sup") or soup.findAll("p") or soup.findAll("big") or soup.findAll("pre"):
-
-        href = a_tag.attrs.get("href")
-
-        if href == "" or href is None:  # href empty tag. Test if it's in a text
-            if url_pattern.match(str(a_tag)):
-                URLS.add(a_tag)
-                print(">>>>>>>>> IT MATCHES STRING TEXT: ", a_tag)
-                print("Link: ", a_tag)
-            else:
-                continue
+    tags_contain_href = soup.find_all(href=True)
+    for tag in tags_contain_href:
+        href = tag.attrs.get("href")
         # Join the URL if it's relative link (not absolute link)
         href = urljoin(url, href)
+        print("href:"+href)
         parsed_href = urlparse(href)
 
         # Remove URL GET parameters, URL fragments, etc.
         href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
         if "javascript" in str(href):
             continue
-        if  "http" not in str(href[0:4]):
+        if "http" not in str(href[0:4]):
             continue
         if not validate_link(href):
             continue            # not a valid URL
@@ -74,14 +67,15 @@ def get_all_links(url):
 
 # Gets all the urls in the page and the urls inside it
 def geturls(url, domain_name):
-
     links = get_all_links(url)
     for link in links:  # Check sub-links recursively
         #if domain_name in link:  # Check if we are analyzing URLs from the same website domain
         geturls(link, domain_name)
 
+
 if __name__ == '__main__':
-    URL = sys.argv[2]
+    # URL = sys.argv[2]
+    URL = "https://tech.meituan.com/"
     DOMAIN_NAME = urlparse(URL).netloc
     print(URL)
     geturls(URL, DOMAIN_NAME)
