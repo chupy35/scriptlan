@@ -17,8 +17,8 @@ process_petition() {
     # install python dependency
     pip3 install -r requirements.txt
 
+    # check repo existence before git clone
     repo_folder="$(basename "$1" .git)"
-    # check if git repository already exist
     if [ ! -d "$repo_folder" ];
     then
       git clone $1
@@ -26,19 +26,24 @@ process_petition() {
       echo "$repo_folder"
     fi
 
+    # pre state: kill node server when terminate
     trap "kill 0" EXIT
 
+    # start server
     cd "$repo_folder"
     npm install
     npm start -- --port $2 &
     sleep 2
 
+    # run python script
     cd ..
     localhost_url="http://localhost:$2"
     python3 "scrapper.py" -u "$localhost_url"
 #    wait
 }
 
+
+# process arguments
 for arg in "$@"
 do
     if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]
@@ -60,6 +65,8 @@ do
     fi
 done
 
+# print 
 echo "github repository: $github and port: $port"
+# run process function
 process_petition $github $port
 
