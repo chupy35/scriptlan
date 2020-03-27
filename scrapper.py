@@ -133,9 +133,15 @@ if __name__ == '__main__':
     # fix [SSL: CERTIFICATE_VERIFY_FAILED] error
     ssl._create_default_https_context = ssl._create_unverified_context
 
-    # URL = sys.argv[2]
     # given_url = "https://tech.meituan.com/"
-    given_url = "https://www.uniqlo.com/ca/en/"
+    # given_url = "https://www.uniqlo.com/ca/en/"
+
+    # given_url = "https://www.lebalthazar.com/fr"
+    # given_url = "https://www.droussel.ca/fr/"
+    # given_url = "http://edpinc.com/"
+
+    given_url = sys.argv[2]
+
     domain_name = urlparse(given_url).netloc
     geturls(given_url, domain_name)
 
