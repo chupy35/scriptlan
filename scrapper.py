@@ -103,6 +103,8 @@ def geturls(url, domain_name):
 
     if len(url_queue) == 0:
         print("finished")
+        # number of visited links
+        print(len(url_visited.keys()))
         return
     else:
         url = url_queue.pop()
