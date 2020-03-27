@@ -20,16 +20,13 @@ URLS = set()
 sys.setrecursionlimit(1500)
 
 # Checks whether url is a valid URL.
-def validate_link(url):
+def is_valid_link(url):
     parsed = urlparse(url)
     return bool(parsed.netloc), bool(parsed.scheme)
 
 
 # Returns all URLs that are found in a page
 def get_all_links(url):
-
-    # Pattern to match URLs
-    url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+] |[!*\(\), ]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
 
     # Domain name of the URL without the protocol
     domain_name = urlparse(url).netloc
@@ -39,23 +36,36 @@ def get_all_links(url):
 
     # Checking for html tags that contain link and text
     tags_contain_href = soup.find_all(href=True)
+
     for tag in tags_contain_href:
         href = tag.attrs.get("href")
-        # Join the URL if it's relative link (not absolute link)
-        href = urljoin(url, href)
-        print("href:"+href)
-        parsed_href = urlparse(href)
+        # if href is absolute link
+        if href.startswith("http"):
+            print("absolute: "+href)
+        # if href is relative url, append to be absolute url
+        if href.startswith("/"):
+            print("relative: " + href)
+            href = urljoin(url, href)
+            print("absolute: "+href)
 
-        # Remove URL GET parameters, URL fragments, etc.
+        # if message, skip
+        if href.find("javascript") != -1:
+            continue
+        # if not http/https, skip
+        if not href.startswith("http"):
+            continue
+        # if not valid link, skip
+        if not is_valid_link(href):
+            continue
+
+        # remove parameters from absolute url
+        # to avoid same url, but different parameters
+        parsed_href = urlparse(href)
         href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
-        if "javascript" in str(href):
-            continue
-        if "http" not in str(href[0:4]):
-            continue
-        if not validate_link(href):
-            continue            # not a valid URL
+
+        # already in the set - avoid checking duplicated URLs
         if href in URLS:
-            continue        # already in the set - avoid checking duplicated URLs
+            continue
         if domain_name not in href:
             print("Link: ", href)
             URLS.add(href)
