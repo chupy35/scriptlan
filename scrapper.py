@@ -9,15 +9,21 @@ Xiaowei Chen
 """
 
 from urllib.request import urlparse, urljoin
+import urllib.error
 import sys
-import re
 from bs4 import BeautifulSoup
 import requests
+import ssl
 
-# Initialize the set of unique links
-URLS = set()
+# # Initialize the set of unique links
+# URLS = set()
 
-sys.setrecursionlimit(1500)
+url_queue = set()
+
+# record visited
+url_visited = {}
+
+# sys.setrecursionlimit(1500)
 
 # Checks whether url is a valid URL.
 def is_valid_link(url):
@@ -26,10 +32,13 @@ def is_valid_link(url):
 
 
 # Returns all URLs that are found in a page
-def get_all_links(url):
+def get_links_from(url, domain_name):
+    # distinct links in this url
+    links = set()
 
-    # Domain name of the URL without the protocol
-    domain_name = urlparse(url).netloc
+    # if is dead link, return set()
+    if is_dead_link(url):
+        return links
 
     # Parsing HTML
     soup = BeautifulSoup(requests.get(url).content, "html.parser")
@@ -50,12 +59,15 @@ def get_all_links(url):
 
         # if message, skip
         if href.find("javascript") != -1:
+            print("javascript")
             continue
         # if not http/https, skip
         if not href.startswith("http"):
+            print("not http")
             continue
         # if not valid link, skip
         if not is_valid_link(href):
+            print("not valid link: " + href)
             continue
 
         # remove parameters from absolute url
@@ -63,39 +75,60 @@ def get_all_links(url):
         parsed_href = urlparse(href)
         href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
 
-        # already in the set - avoid checking duplicated URLs
-        if href in URLS:
+        # if not in the same domain, skip
+        if not parsed_href.netloc == domain_name:
+            print("not the same domain name: "+ href)
             continue
-        if domain_name not in href:
-            print("Link: ", href)
-            URLS.add(href)
-            continue
-        URLS.add(href)
-        print("Link: ", href)
-    return URLS
+        else:
+            # add links to set
+            links.add(href)
+
+    return links
 
 
 # Gets all the urls in the page and the urls inside it
 def geturls(url, domain_name):
-    links = get_all_links(url)
-    for link in links:  # Check sub-links recursively
-        #if domain_name in link:  # Check if we are analyzing URLs from the same website domain
-        geturls(link, domain_name)
+    url_visited[url] = True
+    links = get_links_from(url, domain_name)
+    for link in links:
+        if not link in url_visited.keys():
+            print("ok:::::")
+            if not is_dead_link(link):
+                url_queue.add(link)
+
+    if len(url_queue) == 0:
+        print("finished")
+        return
+    else:
+        url = url_queue.pop()
+        geturls(url, domain_name)
+
+
+# if is dead link, return True and write to file
+def is_dead_link(link):
+    try:
+        req = urllib.request.Request(link, method="HEAD")
+        return False
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            print("404 error~~~~~!!!!!")
+            write_dead_link(link)
+        return True
+
+
+# write dead link
+def write_dead_link(link):
+    with open("dead_link.txt", "w+") as f:
+        f.write(link+"\n")
 
 
 if __name__ == '__main__':
+
+    # fix [SSL: CERTIFICATE_VERIFY_FAILED] error
+    ssl._create_default_https_context = ssl._create_unverified_context
+
     # URL = sys.argv[2]
-    URL = "https://tech.meituan.com/"
-    DOMAIN_NAME = urlparse(URL).netloc
-    print(URL)
-    geturls(URL, DOMAIN_NAME)
+    given_url = "https://tech.meituan.com/"
+    domain_name = urlparse(given_url).netloc
+    geturls(given_url, domain_name)
 
-    print("Number of URLS:")
-    print(len(URLS))
-    print("URLS:")
-    print(URLS)
-
-    # Save output with found links
-    with open(f"{DOMAIN_NAME}_links.txt", "w") as f:
-        for internal_link in URLS:
-            print(internal_link.strip(), file=f)
