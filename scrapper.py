@@ -33,6 +33,7 @@ def is_valid_link(url):
 
 # Returns all URLs that are found in a page
 def get_links_from(url, domain_name):
+
     # distinct links in this url
     links = set()
 
@@ -40,8 +41,12 @@ def get_links_from(url, domain_name):
     if is_dead_link(url):
         return links
 
+    # add user_agent
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    r = requests.get(url, headers=headers)
+
     # Parsing HTML
-    soup = BeautifulSoup(requests.get(url).content, "html.parser")
+    soup = BeautifulSoup(r.text, "html.parser")
 
     # Checking for html tags that contain link and text
     tags_contain_href = soup.find_all(href=True)
@@ -122,13 +127,15 @@ def write_dead_link(link):
         f.write(link+"\n")
 
 
+
 if __name__ == '__main__':
 
     # fix [SSL: CERTIFICATE_VERIFY_FAILED] error
     ssl._create_default_https_context = ssl._create_unverified_context
 
     # URL = sys.argv[2]
-    given_url = "https://tech.meituan.com/"
+    # given_url = "https://tech.meituan.com/"
+    given_url = "https://www.uniqlo.com/ca/en/"
     domain_name = urlparse(given_url).netloc
     geturls(given_url, domain_name)
 
