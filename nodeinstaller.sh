@@ -5,7 +5,6 @@
 #	- le script bash doit cloner le git, installer les dépendence node (npm install)
 #	- le script bash doit partir le serveur node localement (npm start) en spécifiant le port (la variable d'environnement se nomme PORT)
 # - le script bash doit exécuter votre programme sur le serveur node local (http://localhost) en vérifiant le bon port.
-# - provide a node repo: https://github.com/tjmonsi/simple-node-server.git
 # - provided link: https://github.com/stevenvachon/broken-link-checker.git
 
 github=""
@@ -13,7 +12,7 @@ port=3000
 
 help_msg="nodeinstaller.sh -g [github repository] -p [port]"
 #lack_git_url_msg="please use nodeinstaller.sh -g [url] to specify a git repository"
-no_para_msg="no paramter provided"
+no_argument_msg="no argument provided"
 lack_git_url_msg="lack git url"
 
 process_petition() {
@@ -71,7 +70,7 @@ is_valid_git_url() {
 # no arguments provided
 if [ $# -eq 0 ]
 then
-  echo_err "$no_para_msg"
+  echo_err "$no_argument_msg"
 # have arguments
 # extract git url and port
 # deal with --help
