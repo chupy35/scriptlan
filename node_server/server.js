@@ -1,18 +1,24 @@
 var http = require('http');  
 var url = require('url');  
 var fs = require('fs');
-const scrape = require('website-scraper');
+var path = require('path');
 
-const hostname = '127.0.0.1';
-const port = 3000;
+// Receiving parameters
+if (process.argv.length == 5) {
+  var hostname = process.argv[2];
+  var port = process.argv[3];
+  var path_website = process.argv[4];
+} else {
+  console.error('\nPlease, type: node server.js <hostname> <port> <directory_with_website>\n');
+  process.exit(1);
+}
 
+// TODO: NATIVE APPLICATION: DOES NOT RENDER CSS. HAVE TO ADD ROUTES MANUALLY
 var server = http.createServer(function(request, response) {  
-    var path = 'node-homepage/index.html'
-    switch (path) {   
-        case 'node-homepage/index.html':  
-            //fs.readFile(__dirname + path, function(error, data) {  
-            fs.readFile(path, function(error, data) {  
-                console.log(`Path: ${path}`)
+    var full_path = path.join(path_website, 'index.html');
+    switch (full_path) {   
+        case full_path:  
+            fs.readFile(full_path, function(error, data) {  
                 if (error) {  
                     response.writeHead(404);  
                     response.write(error);  
@@ -28,7 +34,7 @@ var server = http.createServer(function(request, response) {
             break;  
         default:  
             response.writeHead(404);  
-            response.write("opps this doesn't exist - 404");  
+            response.write("Error 404! Website does not exist! Maybe it's missing the file index.html");  
             response.end();  
             break;  
     }  
