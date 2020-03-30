@@ -6,12 +6,15 @@
 #	- le script bash doit partir le serveur node localement (npm start) en spécifiant le port (la variable d'environnement se nomme PORT)
 # - le script bash doit exécuter votre programme sur le serveur node local (http://localhost) en vérifiant le bon port.
 # - provide a node repo: https://github.com/tjmonsi/simple-node-server.git
+# - provided link: https://github.com/stevenvachon/broken-link-checker.git
 
 github=""
-#port=3000
+port=3000
 
 help_msg="nodeinstaller.sh -g [github repository] -p [port]"
-lack_git_url_msg="please use nodeinstaller.sh -g [url] to specify a git repository"
+#lack_git_url_msg="please use nodeinstaller.sh -g [url] to specify a git repository"
+no_para_msg="no paramter provided"
+lack_git_url_msg="lack git url"
 
 process_petition() {
     # install python dependency
@@ -42,10 +45,39 @@ process_petition() {
 #    wait
 }
 
+# make the error message shown in red color
+echo_err() {
+  echo -e "\033[1;31m ERROR! "$1" \033[0m"
+}
 
-# process arguments
-for arg in "$@"
-do
+# is git url provided from arguments
+is_git_url_provided() {
+  if [ "$1" == ""  ]
+  then
+    echo_err "$lack_git_url_msg"
+  fi
+}
+
+# std:err append to std:out
+is_valid_git_url() {
+  output=$((git ls-remote --exit-code -h "$1") 2>&1)
+  # inlcude error message
+  if [[ "$output" = *fatal* ]]
+  then
+    echo_err "invalid git url"
+  fi
+}
+
+# no arguments provided
+if [ $# -eq 0 ]
+then
+  echo_err "$no_para_msg"
+# have arguments
+# extract git url and port
+# deal with --help
+else
+  for arg in "$@"
+  do
     if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]
     then
         echo "$help_msg"
@@ -56,17 +88,15 @@ do
     fi
     if [ "$arg" == "--git" ] || [ "$arg" == "-g" ]
     then
-        if [ "$2" == ""  ]
-         then
-            echo "$lack_git_url_msg"
-        else
-            github=$2
-        fi
+        github=$2
     fi
-done
+  done
+fi
 
-# print 
+
+is_git_url_provided "$github"
+is_valid_git_url "$github"
+# print
 echo "github repository: $github and port: $port"
 # run process function
 process_petition $github $port
-
