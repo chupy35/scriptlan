@@ -15,8 +15,9 @@ help_msg="nodeinstaller.sh -g [github repository] -p [port]"
 no_argument_msg="no argument provided"
 lack_git_url_msg="lack git url"
 
+
 process_petition() {
-    # install python dependency
+#    # install python dependency
     pip3 install -r requirements.txt
 
     # check repo existence before git clone
@@ -67,35 +68,69 @@ is_valid_git_url() {
   fi
 }
 
-# no arguments provided
-if [ $# -eq 0 ]
-then
+# no arguments provided in arguments
+is_no_arguments() {
+  if [ $1 -eq 0 ]
+  then
   echo_err "$no_argument_msg"
-# have arguments
-# extract git url and port
-# deal with --help
-else
-  for arg in "$@"
-  do
-    if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]
-    then
-        echo "$help_msg"
-    fi
-    if [ "$arg" == "--port" ] || [ "$arg" == "-p" ]
-    then
-        port=$4
-    fi
-    if [ "$arg" == "--git" ] || [ "$arg" == "-g" ]
-    then
-        github=$2
-    fi
-  done
-fi
+  fi
+}
+
+# contains help requirement in command line
+is_help_needed() {
+  if [ "$1" == "--help" ] || [ "$1" == "-h" ] ||
+     [ "$2" == "--help" ] || [ "$2" == "-h" ] ||
+     [ "$3" == "--help" ] || [ "$3" == "-h" ] ||
+     [ "$4" == "--help" ] || [ "$4" == "-h" ]
+  then
+  echo $help_msg
+  fi
+}
+
+# extract git url from command line
+extract_git_url() {
+  if [ "$1" == "--git" ] || [ "$1" == "-g" ]
+  then
+  github=$2
+  fi
+  if [ "$3" == "--git" ] || [ "$3" == "-g" ]
+  then
+  github=$4
+  fi
+  echo "extract:::::git url"
+  echo "$github"
+}
 
 
+# extract prot from command line
+extract_port() {
+  if [ "$1" == "--port" ] || [ "$1" == "-p" ]
+  then
+  port=$2
+  fi
+  if [ "$3" == "--port" ] || [ "$3" == "-p" ]
+  then
+  port=$4
+  fi
+  echo "extract:::::port"
+  echo "$port"
+}
+
+# extract git url, port from command line
+# check whether help info is needed
+extract_arguments() {
+  is_help_needed $1 $2 $3 $4
+  extract_git_url $1 $2 $3 $4
+  extract_port $1 $2 $3 $4
+}
+
+# check if no arguments provided
+is_no_arguments $#
+# extract arguments
+extract_arguments "$@"
+# check if git url provided
 is_git_url_provided "$github"
+# check if git url valid
 is_valid_git_url "$github"
-# print
-echo "github repository: $github and port: $port"
-# run process function
+# process
 process_petition $github $port
