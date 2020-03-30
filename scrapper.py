@@ -14,7 +14,7 @@ import sys
 from bs4 import BeautifulSoup
 import requests
 import ssl
-
+import sys, getopt
 # # Initialize the set of unique links
 # URLS = set()
 
@@ -23,7 +23,7 @@ url_queue = set()
 # record visited
 url_visited = {}
 
-# sys.setrecursionlimit(1500)
+sys.setrecursionlimit(1500)
 
 # Checks whether url is a valid URL.
 def is_valid_link(url):
@@ -130,20 +130,42 @@ def write_dead_link(link):
 
 
 
-if __name__ == '__main__':
-
+def main(argv):
     # fix [SSL: CERTIFICATE_VERIFY_FAILED] error
     ssl._create_default_https_context = ssl._create_unverified_context
-
-    # given_url = "https://tech.meituan.com/"
+    #given_url = "https://tech.meituan.com/"
     # given_url = "https://www.uniqlo.com/ca/en/"
 
     # given_url = "https://www.lebalthazar.com/fr"
     # given_url = "https://www.droussel.ca/fr/"
     # given_url = "http://edpinc.com/"
+    try:
+        opts, args = getopt.getopt(argv,"h:u:",['help', 'url='])
+    except getopt.GetoptError:
+      print('scrapper.py -u [url]') 
+      sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            print('scrapper.py -u [url]')
+            sys.exit()
+        elif opt in ("-u", "--url"):
+            #url = arg
+            print(arg)
+            given_url = arg
+            print("URL: ")
+            print(given_url)
+            domain_name = urlparse(given_url).netloc
+            geturls(given_url, domain_name)
 
-    given_url = sys.argv[2]
 
-    domain_name = urlparse(given_url).netloc
-    geturls(given_url, domain_name)
+#    filename = os.fsdecode(currentPath)
+#    print(filename)
+#    if filename and allowed_file(filename):
+#        jsonresult = processfile(filename)
+#        saveresult(jsonresult, randomString())
+#    else:
+#        pass
 
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
