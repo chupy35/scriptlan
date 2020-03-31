@@ -117,10 +117,8 @@ def is_dead_link(link):
     try:
         req = urllib.request.Request(link, method="HEAD")
         return False
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            print("404 error~~~~~!!!!!")
-            write_dead_link(link)
+    except urllib.error.HTTPError:
+        write_dead_link(link)
         return True
 
 
