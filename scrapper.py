@@ -92,7 +92,7 @@ def get_links_from(url, domain_name):
 
 
 # Gets all the urls in the page and the urls inside it
-def geturls(url, domain_name):
+def geturls(url, domain_name, crawl):
     url_visited[url] = True
     links = get_links_from(url, domain_name)
     for link in links:
@@ -107,8 +107,9 @@ def geturls(url, domain_name):
         print(len(url_visited.keys()))
         return
     else:
-        url = url_queue.pop()
-        geturls(url, domain_name)
+        if crawl != 0:
+            url = url_queue.pop()
+            geturls(url, domain_name, 1)
 
 
 # if is dead link, return True and write to file
@@ -139,30 +140,34 @@ def main(argv):
     # given_url = "https://www.lebalthazar.com/fr"
     # given_url = "https://www.droussel.ca/fr/"
     # given_url = "http://edpinc.com/"
+
+    crawl = 1
     try:
-        opts, args = getopt.getopt(argv,"h:u:",['help', 'url='])
+        opts, args = getopt.getopt(argv,"h:u:c:",['help', 'url=', 'crawl='])
     except getopt.GetoptError:
-      print('scrapper.py -u [url]') 
+      print('Usage: python scrapper.py -u [url] \n Crawl links and the links in the links \n -u, --url    url to crawl \n -c, --crawl [on/off]     turn on or off crawl') 
       sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print('scrapper.py -u [url]')
+            print('Usage: python scrapper.py -u [url] \n Crawl links and the links in the links \n -u, --url    url to crawl \n -c, --crawl [on/off]     turn on or off crawl, default=on')
             sys.exit()
+        elif opt in ("-c", "--crawl"):
+            if arg == "on":
+                crawl = 1
+            if arg == "off":
+                crawl = 0
         elif opt in ("-u", "--url"):
-            #url = arg
-            print(arg)
             given_url = arg
             print("URL: ")
             print(given_url)
             domain_name = urlparse(given_url).netloc
-            geturls(given_url, domain_name)
+    #print("CRAWL VALUE %i" %(crawl))
+    geturls(given_url, domain_name, crawl)
 
 
 #    filename = os.fsdecode(currentPath)
 #    print(filename)
 #    if filename and allowed_file(filename):
-#        jsonresult = processfile(filename)
-#        saveresult(jsonresult, randomString())
 #    else:
 #        pass
 
