@@ -42,14 +42,14 @@ def get_links_from(url, domain_name):
 
     print("URL: ", url)
 
-    # distinct links in this url
-    links = set()
+    links = set()       # distinct links in this url
 
     # if is dead link, return set()
     if is_dead_link(url):
         print("It is a dead link")
         return links
 
+    # Requesting website
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'}  
         r = requests.get(url, headers=headers)
@@ -64,34 +64,36 @@ def get_links_from(url, domain_name):
         soup = BeautifulSoup(r.text, "html.parser")
         # Checking for html tags that contain link and text
         tags_contain_href = soup.find_all(href=True)
+        print("tags: ", tags_contain_href)
     except Exception as err:
         print ("Error occurred during BeautifulSoup parsing:", err)
     
+    if len(tags_contain_href) > 0:
+        for tag in tags_contain_href:
+            print("tag:  ", tag)
+            href = tag.attrs.get("href")
+            print("href: ", href)
+            # if href is absolute link
+            if href.startswith("http"):
+                print("absolute: "+href)
+            # if href is relative url, append to be absolute url
+            if href.startswith("/"):
+                #print("relative: " + href)
+                href = urljoin(url, href)
+                #print("absolute: "+href)
 
-
-    for tag in tags_contain_href:
-        href = tag.attrs.get("href")
-        # if href is absolute link
-        if href.startswith("http"):
-            print("absolute: "+href)
-        # if href is relative url, append to be absolute url
-        if href.startswith("/"):
-            #print("relative: " + href)
-            href = urljoin(url, href)
-            #print("absolute: "+href)
-
-        # if message, skip
-        if href.find("javascript") != -1:
-            print("javascript")
-            continue
-        # if not http/https, skip
-        if not href.startswith("http"):
-            print("not http: ", href)
-            continue
-        # if not valid link, skip
-        if not is_valid_link(href):
-            print("not valid link: " + href)
-            continue
+            # if message, skip
+            if href.find("javascript") != -1:
+                print("javascript")
+                continue
+            # if not http/https, skip
+            if not href.startswith("http"):
+                print("not http: ", href)
+                continue
+            # if not valid link, skip
+            if not is_valid_link(href):
+                print("not valid link: " + href)
+                continue
 
         # remove parameters from absolute url
         # to avoid same url, but different parameters
@@ -101,10 +103,12 @@ def get_links_from(url, domain_name):
         # if not in the same domain, skip
         if not parsed_href.netloc == domain_name:
             print("not the same domain name: "+ href)
-            continue
+            #continue
         else:
             # add links to set
             links.add(href)
+    else:
+        print("No tags were identified when parsing the url: ", url)
 
     return links
 
@@ -120,6 +124,7 @@ def geturls(url, domain_name, crawl):
 
     links = get_links_from(url, domain_name)
     print("links: ", links)
+    # TODO: Check len links
     for link in links:
         print("TESTING LINK: ", link)
         if link in url_visited:
