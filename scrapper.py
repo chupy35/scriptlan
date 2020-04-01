@@ -127,6 +127,8 @@ def get_links_from(url, domain_name):
 def geturls(url, domain_name, crawl):
     print("\n\nGetting URLS...\n\n")
     url_visited[url] = True
+
+    dead_links = set()
     
     print("url: ", url)
     print("domain name: ", domain_name)
@@ -134,17 +136,26 @@ def geturls(url, domain_name, crawl):
 
     if not is_dead_link(url):
         links = get_links_from(url, domain_name)
-        print("links: ", links)
-        # TODO: Check len links
-        for link in links:
-            print("TESTING LINK: ", link)
-            if link in url_visited:
-                print("IS URL VISITED: %s %s " % (url_visited[link], link))
-            if not link in url_visited.keys():
-                print("ok::::: URL NOT VISITED YET: ", link)
-                if not is_dead_link(link):
-                    url_queue.add(link)
+        print("\n\nlinks: ", links)
+        print("\n")
+        if len(links) > 0:
+            for link in links:
+                print("\n\n")
+                print("TESTING LINK: ", link)
+                if link in url_visited:
+                    print("IS URL VISITED: %s ||| %s " % (url_visited[link], link))
+                if not link in url_visited.keys():
+                    print("ok::::: URL NOT VISITED YET: ", link)
+                    if not is_dead_link(link):
+                        print("NOT A DEAD LINK")
+                        url_queue.add(link)             # Has all valid links
+                    else: 
+                        print("Dead link: ", link)
+                        dead_links.add(link)
+        else:
+            print("No links were found in the website: ", url)
     else:
+        dead_links.add(url)
         print("Dead link: ", url)
 
     if len(url_queue) == 0:
@@ -160,14 +171,26 @@ def geturls(url, domain_name, crawl):
 
 # if is dead link, return True and write to file
 def is_dead_link(link):
+    # try:
+    #     print("                 testing link: ", link)
+    #     req = urllib.request.Request(link, method="HEAD")
+    #     return False
+    # except urllib.error.HTTPError:
+    #     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DEAD LINK")
+    #     write_dead_link(link)
+    #     return True
+
     try:
-        print("                 testing link: ", link)
-        req = urllib.request.Request(link, method="HEAD")
+        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'}  
+        r = requests.get(link, headers=headers)
+        r.raise_for_status()                    # If the response was successful, no Exception will be raised
         return False
-    except urllib.error.HTTPError:
-        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DEAD LINK")
-        write_dead_link(link)
+    except Exception as err:
+        print(f'Error occurred during URL Request: {err}')
         return True
+    else:
+        print('URL request == Success!')
+        return False
 
 
 # write dead link
