@@ -135,6 +135,16 @@ def write_dead_link(link):
 
 
 
+# - your script accept an argument to tel what url to use (1 point) - ok
+# - your script accept argument to check a local file to parse. there cannot be any crawling here since there is no domain. (1 point) - ok
+# - your script accept argument to activate/desactivate crawling. (same as doing a search with a depth of 1) (1 point) - ok
+
+# - your script accept data in stdin in the 3 following form (2 point) :
+    # - the std:in can receive an HTML page to parse and check. - ok
+    # - the std:in can receive a list of website to check - TODO
+    # - the std:in can receive a list of file to check - TODO
+    # - an argument can be used to choose the form of data expected in std:in. - ok
+
 def main(argv):
     # fix [SSL: CERTIFICATE_VERIFY_FAILED] error
     ssl._create_default_https_context = ssl._create_unverified_context
@@ -145,50 +155,76 @@ def main(argv):
     # given_url = "https://www.droussel.ca/fr/"
     # given_url = "http://edpinc.com/"
 
-    crawl = 1
-    help_message = 'Usage: python scrapper.py -u [url] \n Crawl links and the links in the links \n -u, --url    url to crawl, default=localhost \n -c, --crawl [on/off]     turn on or off crawl, default=on \n -f, --file [filepath]  a file path to parse \n -p --port [port]     Specify a port if the server is running in other than default ' 
+    help_message = 'Usage: python scrapper.py \n -u, --url = url to crawl, default=localhost \n -c, --crawl [on/off]  = turn on or off crawl, default=on \n -f, --file [filepath] = a file path to parse \n -p --port [port] = specify a port if the server is running in other than default \n -lf --list_files = list of files to check (each line of the file must be a different file) \n -lw --list_website = list of websites to check (each line of the file must be a different website)\n' 
     try:
-        opts, args = getopt.getopt(argv,"hu:c:f:p:",['help', 'url=', 'crawl=', 'file=', 'port='])
+        opts, args = getopt.getopt(argv,"h:u:c:f:p:lf:lw",['help', 'url=', 'crawl=', 'file=', 'port=', 'list_files=', 'list_website'])
     except getopt.GetoptError:
       print(help_message) 
       sys.exit(2)
-    port=3000
-    given_url = "http://localhost"
+
+    port = 3000
+    crawl = 1
     fselect = 0
+    given_url = "http://localhost"
+    
     for opt, arg in opts:
-        if opt == '-h':
+
+        if opt == '-h':                         # help message
             print(help_message)
             sys.exit()
-        elif opt in ("-c", "--crawl"):
+       
+        elif opt in ("-c", "--crawl"):          # activate/deactivate crawling
             if arg == "on":
                 crawl = 1
             if arg == "off":
                 crawl = 0
-        elif opt in ("-p", "--port"):
+       
+        elif opt in ("-p", "--port"):           # port. TODO: Check if it's needed
             if arg.isdigit():
                 port = arg
             else:
                 print("Please insert a valid port.")
                 sys.exit()
-        elif opt in ("-f", "--file"):
+       
+        elif opt in ("-f", "--file"):             # File path to parse
             fselect = 1
+            crawl = 0                             # There is no crawling here, since there is no domain
             print(arg)
             fname = ntpath.basename(arg)
             try:
                 dst = node_path + fname
-                copyfile(arg, dst)
+                copyfile(arg, dst)                  # TODO: run script
             except IOError:
                 print("Please choose a valid file path")
                 sys.exit()
-        elif opt in ("-u", "--url"):
+       
+        elif opt in ("-u", "--url"):                 # url to crawl, decide whether it's a normal website or localhost
             given_url = arg
+            crawl = 1
             print("URL: ")
             print(given_url)
-            domain_name = urlparse(given_url).netloc
-    if fselect == 1:
-        domain_name = "http://localhost:"
-        given_url = domain_name + str(port)
-    geturls(given_url, domain_name, crawl)
+            if "localhost" in given_url:
+                domain_name = "http://localhost:"
+                given_url = domain_name + str(port)
+                geturls(given_url, domain_name, crawl)
+            else:
+                domain_name = urlparse(given_url).netloc
+                geturls(given_url, domain_name, crawl)
+
+        elif opt in ("-lf", "--list_files"):
+            print("TODO: List of files")            # TODO
+
+        elif opt in ("-lw", "--list_website"):
+            print("TODO: List of websites")         # TODO
+
+        else:
+            print("Parameter not recognized: %s !\n" % opt)
+            print(help_message)
+    
+    # if fselect == 1:
+    #     domain_name = "http://localhost:"
+    #     given_url = domain_name + str(port)
+    #     geturls(given_url, domain_name, crawl)
 
 
 #    filename = os.fsdecode(currentPath)
@@ -196,7 +232,6 @@ def main(argv):
 #    if filename and allowed_file(filename):
 #    else:
 #        pass
-
 
 if __name__ == "__main__":
     main(sys.argv[1:])
