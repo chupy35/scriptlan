@@ -34,6 +34,8 @@ sys.setrecursionlimit(1500)
 # Checks whether url is a valid URL.
 def is_valid_link(url):
     parsed = urlparse(url)
+    print("bool(parsed.netloc): ", bool(parsed.netloc))
+    print("bool(parsed.scheme): ", bool(parsed.scheme))
     return bool(parsed.netloc), bool(parsed.scheme)
 
 
@@ -70,14 +72,16 @@ def get_links_from(url, domain_name):
     
     if len(tags_contain_href) > 0:
         for tag in tags_contain_href:
+            print("\n\n")
             print("tag:  ", tag)
             href = tag.attrs.get("href")
             print("href: ", href)
+
             # if href is absolute link
-            if href.startswith("http"):
+            if href.startswith("http") or href.startswith("https"):
                 print("absolute: "+href)
             # if href is relative url, append to be absolute url
-            if href.startswith("/"):
+            if href.startswith("/") or href.startswith("./"):
                 #print("relative: " + href)
                 href = urljoin(url, href)
                 #print("absolute: "+href)
@@ -87,7 +91,7 @@ def get_links_from(url, domain_name):
                 print("javascript")
                 continue
             # if not http/https, skip
-            if not href.startswith("http"):
+            if not (href.startswith("http") or href.startswith("https")):
                 print("not http: ", href)
                 continue
             # if not valid link, skip
@@ -95,18 +99,18 @@ def get_links_from(url, domain_name):
                 print("not valid link: " + href)
                 continue
 
-        # remove parameters from absolute url
-        # to avoid same url, but different parameters
-        parsed_href = urlparse(href)
-        href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
+            # remove parameters from absolute url
+            # to avoid same url, but different parameters
+            parsed_href = urlparse(href)
+            href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
 
-        # if not in the same domain, skip
-        if not parsed_href.netloc == domain_name:
-            print("not the same domain name: "+ href)
-            #continue
-        else:
-            # add links to set
-            links.add(href)
+            # if not in the same domain, skip
+            if not parsed_href.netloc == domain_name:
+                print("not the same domain name: "+ href)
+                continue
+            else:       # same domain, valid link
+                # add links to set
+                links.add(href)
     else:
         print("No tags were identified when parsing the url: ", url)
 
