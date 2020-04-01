@@ -14,15 +14,19 @@ has_provided_arguments=0
 need_help=0
 has_provided_git_url=0
 has_valid_git_url=0
+has_valid_port=0
 
 
 help_msg="nodeinstaller.sh -g [github repository] -p [port]"
 #lack_git_url_msg="please use nodeinstaller.sh -g [url] to specify a git repository"
 no_argument_msg="no argument provided"
-lack_git_url_msg="lack git url"
+lack_git_url_msg="please provide a git url"
+lack_valid_url_msg="please provide a valid git url"
+lack_valid_port_msg="please provide a valid port"
 
 
 process_petition() {
+#    echo "git url: $1, port: $2"
 #    # install python dependency
     pip3 install -r requirements.txt
 
@@ -67,6 +71,7 @@ is_git_url_provided() {
   fi
 }
 
+
 # std:err append to std:out
 is_valid_git_url() {
   output=$((git ls-remote --exit-code -h "$1") 2>&1)
@@ -74,9 +79,28 @@ is_valid_git_url() {
   if [[ "$output" = *fatal* ]]
   then
     has_valid_git_url=0
-    echo_err "invalid git url"
+    echo_err "$lack_valid_url_msg"
   else
     has_valid_git_url=1
+  fi
+}
+
+# check if port is valid
+is_valid_port() {
+  has_valid_port=0
+  # if port is a number
+  if [ "$1" -gt 0 ] 2>/dev/null
+  then
+    # if port is a number in [0, 65535]
+    if (($1>=0 && $1<=65535))
+    then
+      has_valid_port=1
+#      echo "valid port"
+    else
+      echo_err "$lack_valid_port_msg"
+    fi
+  else
+    echo_err "$lack_valid_port_msg"
   fi
 }
 
@@ -86,6 +110,7 @@ has_arguments() {
   then
     has_provided_arguments=0
     echo_err "$no_argument_msg"
+    echo "$help_msg"
   else
     has_provided_arguments=1
   fi
@@ -152,7 +177,13 @@ extract_arguments() {
       if [ $has_valid_git_url -eq 1 ]
       then
 #        echo "has valid git url"
-        process_petition $github $port
+#        echo "git: $github port: $port"
+        is_valid_port "$port"
+        if [ $has_valid_port -eq 1 ]
+        then
+#          echo "successfully~~~~~~~~~~"
+          process_petition $github $port
+        fi
       fi
     fi
   fi
