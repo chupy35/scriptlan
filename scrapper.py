@@ -34,8 +34,8 @@ sys.setrecursionlimit(1500)
 # Checks whether url is a valid URL.
 def is_valid_link(url):
     parsed = urlparse(url)
-    print("bool(parsed.netloc): ", bool(parsed.netloc))
-    print("bool(parsed.scheme): ", bool(parsed.scheme))
+    # print("bool(parsed.netloc): ", bool(parsed.netloc))
+    # print("bool(parsed.scheme): ", bool(parsed.scheme))
     return bool(parsed.netloc), bool(parsed.scheme)
 
 
@@ -81,23 +81,24 @@ def get_links_from(url, domain_name):
             if href.startswith("http") or href.startswith("https"):
                 print("absolute: "+href)
             # if href is relative url, append to be absolute url
-            if href.startswith("/") or href.startswith("./"):
+            #if href.startswith("/") or href.startswith("./") or href.startswith("../"):
+            else:
                 #print("relative: " + href)
                 href = urljoin(url, href)
-                #print("absolute: "+href)
+                print("absolute new href: "+href)
 
             # if message, skip
-            if href.find("javascript") != -1:
-                print("javascript")
-                continue
-            # if not http/https, skip
-            if not (href.startswith("http") or href.startswith("https")):
-                print("not http: ", href)
-                continue
-            # if not valid link, skip
-            if not is_valid_link(href):
-                print("not valid link: " + href)
-                continue
+            # if href.find("javascript") != -1:
+            #     print("javascript")
+            #     continue
+            # # if not http/https, skip
+            # if not (href.startswith("http") or href.startswith("https")):
+            #     print("not http: ", href)
+            #     continue
+            # # if not valid link, skip
+            # if not is_valid_link(href):
+            #     print("not valid link: " + href)
+            #     continue
 
             # remove parameters from absolute url
             # to avoid same url, but different parameters
@@ -110,9 +111,15 @@ def get_links_from(url, domain_name):
                 continue
             else:       # same domain, valid link
                 # add links to set
-                links.add(href)
+                if is_valid_link(href):
+                    print("         ADDING THIS URL TO SET: ", href)
+                    links.add(href)
     else:
         print("No tags were identified when parsing the url: ", url)
+
+
+    print("\n\n\n\n FINAL LINKS: ", links)
+    print("\n\n\n")
 
     return links
 
