@@ -39,17 +39,16 @@ def is_valid_link(url):
     return bool(parsed.netloc), bool(parsed.scheme)
 
 
-# Returns all URLs that are found in a page
+# Returns all URLs that are found in a page - no matter if they are dead or not... we check it in the function geturls
 def get_links_from(url, domain_name):
-
     print("URL: ", url)
 
     links = set()       # distinct links in this url
 
     # if is dead link, return set()
-    if is_dead_link(url):
-        print("It is a dead link")
-        return links
+    # if is_dead_link(url):
+    #     print("It is a dead link")
+    #     return links
 
     # Requesting website
     try:
@@ -66,7 +65,7 @@ def get_links_from(url, domain_name):
         soup = BeautifulSoup(r.text, "html.parser")
         # Checking for html tags that contain link and text
         tags_contain_href = soup.find_all(href=True)
-        print("tags: ", tags_contain_href)
+        #print("tags: ", tags_contain_href)
     except Exception as err:
         print ("Error occurred during BeautifulSoup parsing:", err)
     
@@ -133,17 +132,20 @@ def geturls(url, domain_name, crawl):
     print("domain name: ", domain_name)
     print("\n\n")
 
-    links = get_links_from(url, domain_name)
-    print("links: ", links)
-    # TODO: Check len links
-    for link in links:
-        print("TESTING LINK: ", link)
-        if link in url_visited:
-            print("IS URL VISITED: %s %s " % (url_visited[link], link))
-        if not link in url_visited.keys():
-            print("ok::::: URL NOT VISITED YET: ", link)
-            if not is_dead_link(link):
-                url_queue.add(link)
+    if not is_dead_link(url):
+        links = get_links_from(url, domain_name)
+        print("links: ", links)
+        # TODO: Check len links
+        for link in links:
+            print("TESTING LINK: ", link)
+            if link in url_visited:
+                print("IS URL VISITED: %s %s " % (url_visited[link], link))
+            if not link in url_visited.keys():
+                print("ok::::: URL NOT VISITED YET: ", link)
+                if not is_dead_link(link):
+                    url_queue.add(link)
+    else:
+        print("Dead link: ", url)
 
     if len(url_queue) == 0:
         print("finished")
