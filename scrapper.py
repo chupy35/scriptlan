@@ -40,22 +40,40 @@ def is_valid_link(url):
 # Returns all URLs that are found in a page
 def get_links_from(url, domain_name):
 
+    print("URL: ", url)
+
     # distinct links in this url
     links = set()
 
     # if is dead link, return set()
     if is_dead_link(url):
+        print("It is a dead link")
         return links
 
-    # add user_agent
-    headers = {'User-Agent': 'Mozilla/5.0'}
-    r = requests.get(url, headers=headers)
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'
+
+        }  
+        r = requests.get(url, headers=headers)
+        #r = requests.get(url)
+        r.raise_for_status()                    # If the response was successful, no Exception will be raised
+   # except HTTPError as http_err:
+   #     print(f'HTTP error occurred: {http_err}')  # Python 3.6
+    except Exception as err:
+        print(f'Error occurred: {err}')
+    else:
+        print('Success!')
 
     # Parsing HTML
     soup = BeautifulSoup(r.text, "html.parser")
+    # TODO: Treat soup response here
+
+    print("soup: ", soup)
 
     # Checking for html tags that contain link and text
     tags_contain_href = soup.find_all(href=True)
+
+    print("tags contain href: ", tags_contain_href)
 
     for tag in tags_contain_href:
         href = tag.attrs.get("href")
@@ -64,9 +82,9 @@ def get_links_from(url, domain_name):
             print("absolute: "+href)
         # if href is relative url, append to be absolute url
         if href.startswith("/"):
-            print("relative: " + href)
+            #print("relative: " + href)
             href = urljoin(url, href)
-            print("absolute: "+href)
+            #print("absolute: "+href)
 
         # if message, skip
         if href.find("javascript") != -1:
@@ -74,7 +92,7 @@ def get_links_from(url, domain_name):
             continue
         # if not http/https, skip
         if not href.startswith("http"):
-            print("not http")
+            print("not http: ", href)
             continue
         # if not valid link, skip
         if not is_valid_link(href):
@@ -99,11 +117,21 @@ def get_links_from(url, domain_name):
 
 # Gets all the urls in the page and the urls inside it
 def geturls(url, domain_name, crawl):
+    print("\n\nGetting URLS...\n\n")
     url_visited[url] = True
+    
+    print("url: ", url)
+    print("domain name: ", domain_name)
+    print("\n\n")
+
     links = get_links_from(url, domain_name)
+    print("links: ", links)
     for link in links:
+        print("TESTING LINK: ", link)
+        if link in url_visited:
+            print("IS URL VISITED: %s %s " % (url_visited[link], link))
         if not link in url_visited.keys():
-            print("ok:::::")
+            print("ok::::: URL NOT VISITED YET: ", link)
             if not is_dead_link(link):
                 url_queue.add(link)
 
@@ -112,18 +140,20 @@ def geturls(url, domain_name, crawl):
         # number of visited links
         print(len(url_visited.keys()))
         return
-    else:
-        if crawl != 0:
-            url = url_queue.pop()
-            geturls(url, domain_name, 1)
+    # else:                                 # commenting because all links in url_queue is dead, so, you cannot get the urls
+    #     if crawl != 0:
+    #         url = url_queue.pop()
+    #         geturls(url, domain_name, 1)
 
 
 # if is dead link, return True and write to file
 def is_dead_link(link):
     try:
+        print("                 testing link: ", link)
         req = urllib.request.Request(link, method="HEAD")
         return False
     except urllib.error.HTTPError:
+        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DEAD LINK")
         write_dead_link(link)
         return True
 
@@ -201,14 +231,14 @@ def main(argv):
         elif opt in ("-u", "--url"):                 # url to crawl, decide whether it's a normal website or localhost
             given_url = arg
             crawl = 1
-            print("URL: ")
-            print(given_url)
+            print("URL to crawl: ", given_url)
             if "localhost" in given_url:
                 domain_name = "http://localhost:"
                 given_url = domain_name + str(port)
                 geturls(given_url, domain_name, crawl)
             else:
                 domain_name = urlparse(given_url).netloc
+                print("Normal website to test: ", domain_name)
                 geturls(given_url, domain_name, crawl)
 
         elif opt in ("-lf", "--list_files"):
