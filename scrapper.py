@@ -51,29 +51,23 @@ def get_links_from(url, domain_name):
         return links
 
     try:
-        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'
-
-        }  
+        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'}  
         r = requests.get(url, headers=headers)
-        #r = requests.get(url)
         r.raise_for_status()                    # If the response was successful, no Exception will be raised
-   # except HTTPError as http_err:
-   #     print(f'HTTP error occurred: {http_err}')  # Python 3.6
     except Exception as err:
-        print(f'Error occurred: {err}')
+        print(f'Error occurred during URL Request: {err}')
     else:
-        print('Success!')
+        print('URL request == Success!')
 
     # Parsing HTML
-    soup = BeautifulSoup(r.text, "html.parser")
-    # TODO: Treat soup response here
+    try: 
+        soup = BeautifulSoup(r.text, "html.parser")
+        # Checking for html tags that contain link and text
+        tags_contain_href = soup.find_all(href=True)
+    except Exception as err:
+        print ("Error occurred during BeautifulSoup parsing:", err)
+    
 
-    print("soup: ", soup)
-
-    # Checking for html tags that contain link and text
-    tags_contain_href = soup.find_all(href=True)
-
-    print("tags contain href: ", tags_contain_href)
 
     for tag in tags_contain_href:
         href = tag.attrs.get("href")
