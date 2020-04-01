@@ -15,6 +15,9 @@ from bs4 import BeautifulSoup
 import requests
 import ssl
 import sys, getopt
+import os
+from shutil import copyfile
+import ntpath
 # # Initialize the set of unique links
 # URLS = set()
 
@@ -22,6 +25,9 @@ url_queue = set()
 
 # record visited
 url_visited = {}
+
+# Node Server Path
+node_path = "node_server/" 
 
 sys.setrecursionlimit(1500)
 
@@ -140,26 +146,48 @@ def main(argv):
     # given_url = "http://edpinc.com/"
 
     crawl = 1
+    help_message = 'Usage: python scrapper.py -u [url] \n Crawl links and the links in the links \n -u, --url    url to crawl, default=localhost \n -c, --crawl [on/off]     turn on or off crawl, default=on \n -f, --file [filepath]  a file path to parse \n -p --port [port]     Specify a port if the server is running in other than default ' 
     try:
-        opts, args = getopt.getopt(argv,"h:u:c:",['help', 'url=', 'crawl='])
+        opts, args = getopt.getopt(argv,"hu:c:f:p:",['help', 'url=', 'crawl=', 'file=', 'port='])
     except getopt.GetoptError:
-      print('Usage: python scrapper.py -u [url] \n Crawl links and the links in the links \n -u, --url    url to crawl \n -c, --crawl [on/off]     turn on or off crawl') 
+      print(help_message) 
       sys.exit(2)
+    port=3000
+    given_url = "http://localhost"
+    fselect = 0
     for opt, arg in opts:
         if opt == '-h':
-            print('Usage: python scrapper.py -u [url] \n Crawl links and the links in the links \n -u, --url    url to crawl \n -c, --crawl [on/off]     turn on or off crawl, default=on')
+            print(help_message)
             sys.exit()
         elif opt in ("-c", "--crawl"):
             if arg == "on":
                 crawl = 1
             if arg == "off":
                 crawl = 0
+        elif opt in ("-p", "--port"):
+            if arg.isdigit():
+                port = arg
+            else:
+                print("Please insert a valid port.")
+                sys.exit()
+        elif opt in ("-f", "--file"):
+            fselect = 1
+            print(arg)
+            fname = ntpath.basename(arg)
+            try:
+                dst = node_path + fname
+                copyfile(arg, dst)
+            except IOError:
+                print("Please choose a valid file path")
+                sys.exit()
         elif opt in ("-u", "--url"):
             given_url = arg
             print("URL: ")
             print(given_url)
             domain_name = urlparse(given_url).netloc
-    #print("CRAWL VALUE %i" %(crawl))
+    if fselect == 1:
+        domain_name = "http://localhost:"
+        given_url = domain_name + str(port)
     geturls(given_url, domain_name, crawl)
 
 
