@@ -18,6 +18,8 @@ import sys, getopt
 import os
 from shutil import copyfile
 import ntpath
+from os import path
+
 # # Initialize the set of unique links
 # URLS = set()
 
@@ -25,6 +27,7 @@ url_queue = set()
 
 # record visited
 url_visited = {}
+dead_links = set()
 
 # Node Server Path
 node_path = "node_server/" 
@@ -123,14 +126,17 @@ def get_links_from(url, domain_name):
 def geturls(url, domain_name, crawl):
     print("\n\nGetting URLS...\n\n")
     url_visited[url] = True
-
-    dead_links = set()
     
     print("url: ", url)
     print("domain name: ", domain_name)
     print("\n\n")
 
-    with open("dead_links.txt", "a+") as f:
+    output_file = "dead_links/dead_links_" + domain_name + ".txt"
+
+    if not path.exists("dead_links"):
+        os.mkdir("dead_links")
+    
+    with open(output_file, "a+") as f:
         if not is_dead_link(url):
             links = get_links_from(url, domain_name)
             print("\nlinks: ", links)
@@ -148,16 +154,18 @@ def geturls(url, domain_name, crawl):
                             url_queue.add(link)             # Has all valid links
                         else: 
                             print("Dead link: ", link)
-                            dead_links.add(link)
-                            f.write("%s\n" % (link))
+                            if link not in dead_links:
+                                dead_links.add(link)
+                                f.write("%s\n" % (link))
 
             else:
                 print("No links were found in the website: ", url)
         else:
-            dead_links.add(url)
-            f.write("%s\n" % (link))
-            print("Dead link: ", url)
-
+            if url not in dead_links:
+                dead_links.add(url)
+                f.write("%s\n" % (url))
+                print("Dead link: ", url)
+        
     # Checking sublinks of the links found in the main page
     if crawl == 1:
         url = url_queue.pop()
