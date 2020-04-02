@@ -10,13 +10,23 @@
 github=""
 port=3000
 
+has_provided_arguments=0
+need_help=0
+has_provided_git_url=0
+has_valid_git_url=0
+has_valid_port=0
+
+
 help_msg="nodeinstaller.sh -g [github repository] -p [port]"
 #lack_git_url_msg="please use nodeinstaller.sh -g [url] to specify a git repository"
 no_argument_msg="no argument provided"
-lack_git_url_msg="lack git url"
+lack_git_url_msg="please provide a git url"
+lack_valid_url_msg="please provide a valid git url"
+lack_valid_port_msg="please provide a valid port"
 
 
 process_petition() {
+#    echo "git url: $1, port: $2"
 #    # install python dependency
     pip3 install -r requirements.txt
 
@@ -54,25 +64,55 @@ echo_err() {
 is_git_url_provided() {
   if [ "$1" == ""  ]
   then
+    has_provided_git_url=0
     echo_err "$lack_git_url_msg"
+  else
+    has_provided_git_url=1
   fi
 }
+
 
 # std:err append to std:out
 is_valid_git_url() {
   output=$((git ls-remote --exit-code -h "$1") 2>&1)
-  # inlcude error message
+  # include error message
   if [[ "$output" = *fatal* ]]
   then
-    echo_err "invalid git url"
+    has_valid_git_url=0
+    echo_err "$lack_valid_url_msg"
+  else
+    has_valid_git_url=1
+  fi
+}
+
+# check if port is valid
+is_valid_port() {
+  has_valid_port=0
+  # if port is a number
+  if [ "$1" -gt 0 ] 2>/dev/null
+  then
+    # if port is a number in [0, 65535]
+    if (($1>=0 && $1<=65535))
+    then
+      has_valid_port=1
+#      echo "valid port"
+    else
+      echo_err "$lack_valid_port_msg"
+    fi
+  else
+    echo_err "$lack_valid_port_msg"
   fi
 }
 
 # no arguments provided in arguments
-is_no_arguments() {
+has_arguments() {
   if [ $1 -eq 0 ]
   then
-  echo_err "$no_argument_msg"
+    has_provided_arguments=0
+    echo_err "$no_argument_msg"
+    echo "$help_msg"
+  else
+    has_provided_arguments=1
   fi
 }
 
@@ -83,7 +123,10 @@ is_help_needed() {
      [ "$3" == "--help" ] || [ "$3" == "-h" ] ||
      [ "$4" == "--help" ] || [ "$4" == "-h" ]
   then
-  echo $help_msg
+    need_help=1
+    echo "$help_msg"
+  else
+    need_help=0
   fi
 }
 
@@ -91,14 +134,13 @@ is_help_needed() {
 extract_git_url() {
   if [ "$1" == "--git" ] || [ "$1" == "-g" ]
   then
-  github=$2
+    github=$2
   fi
   if [ "$3" == "--git" ] || [ "$3" == "-g" ]
   then
-  github=$4
+    github=$4
   fi
-  echo "extract:::::git url"
-  echo "$github"
+#  echo "extracted git url: $github"
 }
 
 
@@ -112,25 +154,51 @@ extract_port() {
   then
   port=$4
   fi
-  echo "extract:::::port"
-  echo "$port"
+#  echo "extracted port: $port"
 }
 
-# extract git url, port from command line
-# check whether help info is needed
+
+# if no arguments provided, stop
+  # if no git url provided, stop
+    # if no valid git url provided, stop
+       # if all satisfy, run ...
 extract_arguments() {
   is_help_needed $1 $2 $3 $4
-  extract_git_url $1 $2 $3 $4
-  extract_port $1 $2 $3 $4
+  if [ $need_help -eq 0 ]
+  then
+#    echo "do not need help"
+    extract_git_url $1 $2 $3 $4
+    extract_port $1 $2 $3 $4
+    is_git_url_provided "$github"
+    if [ $has_provided_git_url -eq 1 ]
+    then
+#      echo "has git url provided"
+      is_valid_git_url "$github"
+      if [ $has_valid_git_url -eq 1 ]
+      then
+#        echo "has valid git url"
+#        echo "git: $github port: $port"
+        is_valid_port "$port"
+        if [ $has_valid_port -eq 1 ]
+        then
+#          echo "successfully~~~~~~~~~~"
+          process_petition $github $port
+        fi
+      fi
+    fi
+  fi
 }
 
-# check if no arguments provided
-is_no_arguments $#
-# extract arguments
-extract_arguments "$@"
-# check if git url provided
-is_git_url_provided "$github"
-# check if git url valid
-is_valid_git_url "$github"
-# process
-process_petition $github $port
+process() {
+  has_arguments $1
+  if [ $has_provided_arguments -eq 1 ]
+  then
+#    echo "has arguments~"
+    extract_arguments $2 $3 $4 $5
+  fi
+}
+
+process $# "$@"
+
+
+
