@@ -19,6 +19,7 @@ import os
 from shutil import copyfile
 import ntpath
 from os import path
+from typing import Dict, Tuple, Sequence, Set
 
 url_queue = set()
 
@@ -30,15 +31,16 @@ node_path = "node_server/"
 sys.setrecursionlimit(1500)
 
 # Checks whether url is a valid URL.
-def is_valid_link(url):
+def is_valid_link(url: str) -> [bool, bool]:
     try:
         parsed = urlparse(url)
         return bool(parsed.netloc), bool(parsed.scheme)
     except Exception as err:
         print(f'Failed to parse url: {err}')
+        return bool(0), bool(0)
 
 # Returns all URLs that are found in a page - no matter if they are dead or not... we check it in the function geturls
-def get_links_from(url, domain_name):
+def get_links_from(url: str, domain_name: str) -> set:
     print("URL: ", url)
 
     links = set()       # distinct links in this url
@@ -104,7 +106,7 @@ def get_links_from(url, domain_name):
     return links
 
 # Gets all the urls in the page and the urls inside it
-def geturls(url, domain_name, crawl):
+def geturls(url: str, domain_name: str, crawl: bool) -> None:
     print("\n\nGetting URLS...\n\n")
     url_visited[url] = True
     
@@ -112,12 +114,12 @@ def geturls(url, domain_name, crawl):
     print("domain name: ", domain_name)
     print("\n\n")
 
-    output_file = "dead_links/dead_links_" + domain_name + ".txt"
+    output_file : str = "dead_links/dead_links_" + domain_name + ".txt"
 
     if not path.exists("dead_links"):
         os.mkdir("dead_links")
     
-    with open(output_file, "w+") as f:
+    with open(output_file, "a+") as f:
         if not is_dead_link(url):
             links = get_links_from(url, domain_name)
             print("\nlinks: ", links)
@@ -157,7 +159,8 @@ def geturls(url, domain_name, crawl):
             geturls(url, domain_name, crawl)
 
   # if is dead link, return True and write to file
-def is_dead_link(link):
+
+def is_dead_link(link: str) -> bool:
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'}  
         r = requests.get(link, headers=headers)
@@ -169,8 +172,6 @@ def is_dead_link(link):
     else:
         print('URL request == Success!')
         return False
-
-
 
 # - your script accept an argument to tel what url to use (1 point) - ok
 # - your script accept argument to check a local file to parse. there cannot be any crawling here since there is no domain. (1 point) - ok
@@ -184,17 +185,17 @@ def is_dead_link(link):
 def main(argv):
     ssl._create_default_https_context = ssl._create_unverified_context
 
-    help_message = 'Usage: python scrapper.py \n -u, --url = url to crawl, default=localhost \n -c, --crawl [on/off]  = turn on or off crawl, default=on \n -f, --file [filepath] = a file path to parse \n -p --port [port] = specify a port if the server is running in other than default \n -lf --list_files = list of files to check (each line of the file must be a different file) \n -lw --list_website = list of websites to check (each line of the file must be a different website)\n' 
+    help_message = 'Usage: python scrapper.py \n -u, --url = url to crawl \n -c, --crawl [on/off]  = turn on or off crawl, default=on \n -f, --file [filepath] = a file path to parse \n -p --port [port] = specify a port if the server is running in other than default \n -l --lfiles = list of files to check (each line of the file must be a different file) \n -w --lwebsite = list of websites to check (each line of the file must be a different website)\n' 
     try:
-        opts, args = getopt.getopt(argv,"h:u:c:f:p:lf:lw",['help', 'url=', 'crawl=', 'file=', 'port=', 'list_files=', 'list_website'])
+        opts, args = getopt.getopt(argv,"h:u:c:f:p:l:w",['help', 'url=', 'crawl=', 'file=', 'port=', 'lfiles=', 'lwebsite'])
     except getopt.GetoptError:
       print(help_message) 
       sys.exit(2)
 
-    port = 3000
-    crawl = 1
-    fselect = 0
-    given_url = "http://localhost"
+    port : int = 3000
+    crawl : bool = 1
+    fselect : bool = 0
+    given_url : str = "http://localhost"
     
     for opt, arg in opts:
 
@@ -241,12 +242,20 @@ def main(argv):
             print("Normal website to test: ", domain_name)
             geturls(given_url, domain_name, crawl)
 
-        elif opt in ("-lf", "--list_files"):
-            print("TODO: List of files")            # TODO
+        # elif opt in ("-l", "--lfiles"):
+        #     print("TODO: List of files")            # TODO
 
-        elif opt in ("-lw", "--list_website"):
+        elif opt in ("-w", "--lwebsite"):
             print("TODO: List of websites")         # TODO
-
+            print("arg: ", arg)
+            input_file = arg
+            print("Input file: ", input_file)
+            with open(input_file, "r") as f:
+                info = f.readlines()
+                for url in info:
+                    domain_name = urlparse(url).netloc
+                    print("Normal website to test: ", domain_name)
+                    geturls(given_url, domain_name, crawl)
         else:
             print("Parameter not recognized: %s !\n" % opt)
             print(help_message)
@@ -255,7 +264,6 @@ def main(argv):
     #     domain_name = "http://localhost:"
     #     given_url = domain_name + str(port)
     #     geturls(given_url, domain_name, crawl)
-
 
 #    filename = os.fsdecode(currentPath)
 #    print(filename)
