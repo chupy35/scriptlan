@@ -34,10 +34,7 @@ sys.setrecursionlimit(1500)
 # Checks whether url is a valid URL.
 def is_valid_link(url):
     parsed = urlparse(url)
-    # print("bool(parsed.netloc): ", bool(parsed.netloc))
-    # print("bool(parsed.scheme): ", bool(parsed.scheme))
     return bool(parsed.netloc), bool(parsed.scheme)
-
 
 # Returns all URLs that are found in a page - no matter if they are dead or not... we check it in the function geturls
 def get_links_from(url, domain_name):
@@ -58,7 +55,7 @@ def get_links_from(url, domain_name):
     except Exception as err:
         print(f'Error occurred during URL Request: {err}')
     else:
-        print('URL request == Success!')
+        print('URL request == Success! ', url)
 
     # Parsing HTML
     try: 
@@ -72,19 +69,20 @@ def get_links_from(url, domain_name):
     if len(tags_contain_href) > 0:
         for tag in tags_contain_href:
             print("\n\n")
-            print("tag:  ", tag)
+            #print("tag:  ", tag)
             href = tag.attrs.get("href")
-            print("href: ", href)
+            #print("href: ", href)
 
             # if href is absolute link
             if href.startswith("http") or href.startswith("https"):
-                print("absolute: "+href)
+                #print("absolute: "+href)
+                href = href
             # if href is relative url, append to be absolute url
             #if href.startswith("/") or href.startswith("./") or href.startswith("../"):
             else:
                 #print("relative: " + href)
                 href = urljoin(url, href)
-                print("absolute new href: "+href)
+                #print("absolute new href: "+href)
 
             # if message, skip
             # if href.find("javascript") != -1:
@@ -106,22 +104,20 @@ def get_links_from(url, domain_name):
 
             # if not in the same domain, skip
             if not parsed_href.netloc == domain_name:
-                print("not the same domain name: "+ href)
+                print("Not the same domain name: "+ href)
                 continue
             else:       # same domain, valid link
                 # add links to set
                 if is_valid_link(href):
-                    print("         ADDING THIS URL TO SET: ", href)
+                    #print("         ADDING THIS URL TO SET: ", href)
                     links.add(href)
     else:
         print("No tags were identified when parsing the url: ", url)
 
-
-    print("\n\n\n\n FINAL LINKS: ", links)
-    print("\n\n\n")
+    # print("\n\n\n\n FINAL LINKS: ", links)
+    # print("\n\n\n")
 
     return links
-
 
 # Gets all the urls in the page and the urls inside it
 def geturls(url, domain_name, crawl):
@@ -134,35 +130,53 @@ def geturls(url, domain_name, crawl):
     print("domain name: ", domain_name)
     print("\n\n")
 
-    if not is_dead_link(url):
-        links = get_links_from(url, domain_name)
-        print("\n\nlinks: ", links)
-        print("\n")
-        if len(links) > 0:
-            for link in links:
-                print("\n\n")
-                print("TESTING LINK: ", link)
-                if link in url_visited:
-                    print("IS URL VISITED: %s ||| %s " % (url_visited[link], link))
-                if not link in url_visited.keys():
-                    print("ok::::: URL NOT VISITED YET: ", link)
-                    if not is_dead_link(link):
-                        print("NOT A DEAD LINK")
-                        url_queue.add(link)             # Has all valid links
-                    else: 
-                        print("Dead link: ", link)
-                        dead_links.add(link)
-        else:
-            print("No links were found in the website: ", url)
-    else:
-        dead_links.add(url)
-        print("Dead link: ", url)
+    with open("dead_links.txt", "a+") as f:
+        if not is_dead_link(url):
+            links = get_links_from(url, domain_name)
+            print("\nlinks: ", links)
+            print("\n")
+            if len(links) > 0:
+                for link in links:
+                    print("\n\n")
+                    print("TESTING LINK: ", link)
+                    if link in url_visited:
+                        print("IS URL VISITED: %s ||| %s " % (url_visited[link], link))
+                    if not link in url_visited.keys():
+                        print("ok::::: URL NOT VISITED YET: ", link)
+                        if not is_dead_link(link):
+                            print("NOT A DEAD LINK")
+                            url_queue.add(link)             # Has all valid links
+                        else: 
+                            print("Dead link: ", link)
+                            dead_links.add(link)
+                            f.write("%s\n" % (link))
 
-    if len(url_queue) == 0:
-        print("finished")
-        # number of visited links
-        print(len(url_visited.keys()))
-        return
+            else:
+                print("No links were found in the website: ", url)
+        else:
+            dead_links.add(url)
+            f.write("%s\n" % (link))
+            print("Dead link: ", url)
+
+    # Checking sublinks of the links found in the main page
+    if crawl == 1:
+        url = url_queue.pop()
+        if len(url_queue) == 0:
+            print("\n\n******************* Finished crawling all links and sublinks *******************")
+            print("Number of visited links: ", len(url_visited.keys()))                  # number of visited links
+            print("Number of dead links: ", len(dead_links))                             # number of dead links
+        else:
+            geturls(url, domain_name, crawl)
+
+    #return url_queue, dead_links
+
+
+    # if len(url_queue) == 0:
+    #     print("finished")
+    #     # number of visited links
+    #     print(len(url_visited.keys()))
+    #     return
+
     # else:                                 # commenting because all links in url_queue is dead, so, you cannot get the urls
     #     if crawl != 0:
     #         url = url_queue.pop()
@@ -194,9 +208,9 @@ def is_dead_link(link):
 
 
 # write dead link
-def write_dead_link(link):
-    with open("dead_link.txt", "w+") as f:
-        f.write(link+"\n")
+# def write_dead_link(link):
+#     with open("dead_link.txt", "w+") as f:
+#         f.write(link+"\n")
 
 
 
