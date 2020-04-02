@@ -1,11 +1,11 @@
 """
-TP1 - Scripting Languages - INF8007
+TP - Scripting Languages - INF8007
 Polytechnique Montreal
 
 Students:
-Isabella Ferreira
-Javier Rosales Tovar
-Xiaowei Chen
+    Isabella Ferreira
+    Javier Rosales Tovar
+    Xiaowei Chen
 """
 
 from urllib.request import urlparse, urljoin
@@ -20,16 +20,11 @@ from shutil import copyfile
 import ntpath
 from os import path
 
-# # Initialize the set of unique links
-# URLS = set()
-
 url_queue = set()
 
-# record visited
 url_visited = {}
 dead_links = set()
 
-# Node Server Path
 node_path = "node_server/" 
 
 sys.setrecursionlimit(1500)
@@ -45,11 +40,6 @@ def get_links_from(url, domain_name):
 
     links = set()       # distinct links in this url
 
-    # if is dead link, return set()
-    # if is_dead_link(url):
-    #     print("It is a dead link")
-    #     return links
-
     # Requesting website
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'}  
@@ -63,29 +53,19 @@ def get_links_from(url, domain_name):
     # Parsing HTML
     try: 
         soup = BeautifulSoup(r.text, "html.parser")
-        # Checking for html tags that contain link and text
-        tags_contain_href = soup.find_all(href=True)
-        #print("tags: ", tags_contain_href)
+        tags_contain_href = soup.find_all(href=True)             # Checking for html tags that contain link and text
     except Exception as err:
         print ("Error occurred during BeautifulSoup parsing:", err)
     
     if len(tags_contain_href) > 0:
         for tag in tags_contain_href:
-            print("\n\n")
-            #print("tag:  ", tag)
             href = tag.attrs.get("href")
-            #print("href: ", href)
 
             # if href is absolute link
             if href.startswith("http") or href.startswith("https"):
-                #print("absolute: "+href)
                 href = href
-            # if href is relative url, append to be absolute url
-            #if href.startswith("/") or href.startswith("./") or href.startswith("../"):
             else:
-                #print("relative: " + href)
                 href = urljoin(url, href)
-                #print("absolute new href: "+href)
 
             # if message, skip
             # if href.find("javascript") != -1:
@@ -112,13 +92,9 @@ def get_links_from(url, domain_name):
             else:       # same domain, valid link
                 # add links to set
                 if is_valid_link(href):
-                    #print("         ADDING THIS URL TO SET: ", href)
                     links.add(href)
     else:
         print("No tags were identified when parsing the url: ", url)
-
-    # print("\n\n\n\n FINAL LINKS: ", links)
-    # print("\n\n\n")
 
     return links
 
@@ -157,7 +133,6 @@ def geturls(url, domain_name, crawl):
                             if link not in dead_links:
                                 dead_links.add(link)
                                 f.write("%s\n" % (link))
-
             else:
                 print("No links were found in the website: ", url)
         else:
@@ -176,32 +151,8 @@ def geturls(url, domain_name, crawl):
         else:
             geturls(url, domain_name, crawl)
 
-    #return url_queue, dead_links
-
-
-    # if len(url_queue) == 0:
-    #     print("finished")
-    #     # number of visited links
-    #     print(len(url_visited.keys()))
-    #     return
-
-    # else:                                 # commenting because all links in url_queue is dead, so, you cannot get the urls
-    #     if crawl != 0:
-    #         url = url_queue.pop()
-    #         geturls(url, domain_name, 1)
-
-
-# if is dead link, return True and write to file
+  # if is dead link, return True and write to file
 def is_dead_link(link):
-    # try:
-    #     print("                 testing link: ", link)
-    #     req = urllib.request.Request(link, method="HEAD")
-    #     return False
-    # except urllib.error.HTTPError:
-    #     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DEAD LINK")
-    #     write_dead_link(link)
-    #     return True
-
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'}  
         r = requests.get(link, headers=headers)
@@ -215,12 +166,6 @@ def is_dead_link(link):
         return False
 
 
-# write dead link
-# def write_dead_link(link):
-#     with open("dead_link.txt", "w+") as f:
-#         f.write(link+"\n")
-
-
 
 # - your script accept an argument to tel what url to use (1 point) - ok
 # - your script accept argument to check a local file to parse. there cannot be any crawling here since there is no domain. (1 point) - ok
@@ -231,16 +176,8 @@ def is_dead_link(link):
     # - the std:in can receive a list of website to check - TODO
     # - the std:in can receive a list of file to check - TODO
     # - an argument can be used to choose the form of data expected in std:in. - ok
-
 def main(argv):
-    # fix [SSL: CERTIFICATE_VERIFY_FAILED] error
     ssl._create_default_https_context = ssl._create_unverified_context
-    #given_url = "https://tech.meituan.com/"
-    # given_url = "https://www.uniqlo.com/ca/en/"
-
-    # given_url = "https://www.lebalthazar.com/fr"
-    # given_url = "https://www.droussel.ca/fr/"
-    # given_url = "http://edpinc.com/"
 
     help_message = 'Usage: python scrapper.py \n -u, --url = url to crawl, default=localhost \n -c, --crawl [on/off]  = turn on or off crawl, default=on \n -f, --file [filepath] = a file path to parse \n -p --port [port] = specify a port if the server is running in other than default \n -lf --list_files = list of files to check (each line of the file must be a different file) \n -lw --list_website = list of websites to check (each line of the file must be a different website)\n' 
     try:
