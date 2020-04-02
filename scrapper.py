@@ -133,7 +133,14 @@ def write_dead_link(link):
     with open("dead_link.txt", "w+") as f:
         f.write(link+"\n")
 
+def process_stdin(stdin):
+    buffer = ""
+   # for li in stdin:
+   #     buffer = buffer + li
+    for chunk in iter(lambda: fp.read(stdin), ''):
+        buffer = buffer + li
 
+    print(buffer)
 
 def main(argv):
     # fix [SSL: CERTIFICATE_VERIFY_FAILED] error
@@ -148,13 +155,14 @@ def main(argv):
     crawl = 1
     help_message = 'Usage: python scrapper.py -u [url] \n Crawl links and the links in the links \n -u, --url    url to crawl, default=localhost \n -c, --crawl [on/off]     turn on or off crawl, default=on \n -f, --file [filepath]  a file path to parse \n -p --port [port]     Specify a port if the server is running in other than default ' 
     try:
-        opts, args = getopt.getopt(argv,"hu:c:f:p:",['help', 'url=', 'crawl=', 'file=', 'port='])
+        opts, args = getopt.getopt(argv,"hu:c:f:p:S",['help', 'url=', 'crawl=', 'file=', 'port=', 'Stdin'])
     except getopt.GetoptError:
       print(help_message) 
       sys.exit(2)
     port=3000
     given_url = "http://localhost"
     fselect = 0
+    stdin = 0
     for opt, arg in opts:
         if opt == '-h':
             print(help_message)
@@ -175,7 +183,7 @@ def main(argv):
             print(arg)
             fname = ntpath.basename(arg)
             try:
-                dst = node_path + fname
+                dst = node_path + "index.html"
                 copyfile(arg, dst)
             except IOError:
                 print("Please choose a valid file path")
@@ -185,10 +193,19 @@ def main(argv):
             print("URL: ")
             print(given_url)
             domain_name = urlparse(given_url).netloc
+        elif opt in ("-S", "--Stdin"):
+            print("SIMIONAAAAAAA!!!!!!")
+            stdin = 1
     if fselect == 1:
         domain_name = "http://localhost:"
         given_url = domain_name + str(port)
-    geturls(given_url, domain_name, crawl)
+        crawl = 0
+    if stdin == 1:
+        domain_name = "http://localhost:"
+        given_url = domain_name + str(port)
+        crawl = 0
+        process_stdin(sys.stdin)
+    #geturls(given_url, domain_name, crawl)
 
 
 #    filename = os.fsdecode(currentPath)
