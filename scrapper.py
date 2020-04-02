@@ -183,6 +183,7 @@ def process_stdin(stdin):
 
     print(buffer)
 
+#Function that receive a list of websites and process them.
 def process_lwebsites(input_file, given_url, crawl):
     print("Input file: ", input_file)
     with open(input_file, "r") as f:
@@ -192,6 +193,7 @@ def process_lwebsites(input_file, given_url, crawl):
             print("Normal website to test: ", domain_name)
             geturls(given_url, domain_name, crawl)
 
+#Function that prints a message and exit of the application
 def printandexit(message):
     print(message)
     sys.exit(2)
@@ -210,11 +212,11 @@ def main(argv):
 
     help_message = 'Usage: python scrapper.py \n -u, --url = url to crawl \n -c, --crawl [on/off]  = turn on or off crawl, default=on \n -f, --file [filepath] = a file path to parse, crawling deactivated in this option  \n -l --lfiles = list of files to check (each line of the file must be a different file) \n -w --lwebsite = list of websites to check (each line of the file must be a different website), crawl deactivated in this option\n'
     badargument_message_url = "The only option to be use with -u, --url is --crawl, -c"
-    badargument_message_lwebsite = "The only option  -l, --lwebsite is provide a listofwebsites, shouldnt be used with other parameter"
+    badargument_message_lwebsite = "The only option  -l, --lwebsite is provide a list of websites, shouldnt be used with other parameter"
 
     badargument_message_stdin = "-S cannot be used with file "
     try:
-        opts, args = getopt.getopt(argv,"h:u:c:f:w:S:l:",['help', 'url=', 'crawl=', 'file=', 'lfiles=', 'stdin', 'lwebsite='])
+        opts, args = getopt.getopt(argv,"h:u:c:f:w:Sl:",['help', 'url=', 'crawl=', 'file=', 'lfiles=', 'stdin=', 'lwebsite='])
     except getopt.GetoptError:
         printandexit(help_message)
 
@@ -261,7 +263,6 @@ def main(argv):
         elif opt in ("-S", "--Stdin"):
             print("SIMIONAAAAAAA!!!!!!")
             stdin = 1
-            #geturls(given_url, domain_name, crawl)
         elif opt in ("-w", "--lwebsite"):
             print("TODO: List of websites")         # TODO
             print("arg: ", arg)
@@ -285,7 +286,6 @@ def main(argv):
 
     if (lwebsite == 1 and stdin == 1) and (lwebsite == 1 and fselect == 1):
         printandexit(badargument_message_lwebsite)
-
 
     if lwebsite == 1:
         crawl = 0
