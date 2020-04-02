@@ -57,47 +57,49 @@ def get_links_from(url, domain_name):
     try: 
         soup = BeautifulSoup(r.text, "html.parser")
         tags_contain_href = soup.find_all(href=True)             # Checking for html tags that contain link and text
+    
+        if len(tags_contain_href) > 0:
+            for tag in tags_contain_href:
+                href = tag.attrs.get("href")
+
+                # if href is absolute link
+                if href.startswith("http") or href.startswith("https"):
+                    href = href
+                else:
+                    href = urljoin(url, href)
+
+                # if message, skip
+                # if href.find("javascript") != -1:
+                #     print("javascript")
+                #     continue
+                # # if not http/https, skip
+                # if not (href.startswith("http") or href.startswith("https")):
+                #     print("not http: ", href)
+                #     continue
+                # # if not valid link, skip
+                # if not is_valid_link(href):
+                #     print("not valid link: " + href)
+                #     continue
+
+                # remove parameters from absolute url
+                # to avoid same url, but different parameters
+                parsed_href = urlparse(href)
+                href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
+
+                # if not in the same domain, skip
+                if not parsed_href.netloc == domain_name:
+                    print("Not the same domain name: "+ href)
+                    continue
+                else:       # same domain, valid link
+                    # add links to set
+                    if is_valid_link(href):
+                        links.add(href)
+        else:
+            print("No tags were identified when parsing the url: ", url)
+
     except Exception as err:
         print ("Error occurred during BeautifulSoup parsing:", err)
     
-    if len(tags_contain_href) > 0:
-        for tag in tags_contain_href:
-            href = tag.attrs.get("href")
-
-            # if href is absolute link
-            if href.startswith("http") or href.startswith("https"):
-                href = href
-            else:
-                href = urljoin(url, href)
-
-            # if message, skip
-            # if href.find("javascript") != -1:
-            #     print("javascript")
-            #     continue
-            # # if not http/https, skip
-            # if not (href.startswith("http") or href.startswith("https")):
-            #     print("not http: ", href)
-            #     continue
-            # # if not valid link, skip
-            # if not is_valid_link(href):
-            #     print("not valid link: " + href)
-            #     continue
-
-            # remove parameters from absolute url
-            # to avoid same url, but different parameters
-            parsed_href = urlparse(href)
-            href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
-
-            # if not in the same domain, skip
-            if not parsed_href.netloc == domain_name:
-                print("Not the same domain name: "+ href)
-                continue
-            else:       # same domain, valid link
-                # add links to set
-                if is_valid_link(href):
-                    links.add(href)
-    else:
-        print("No tags were identified when parsing the url: ", url)
 
     return links
 
@@ -229,14 +231,15 @@ def main(argv):
             given_url = arg
             crawl = 1
             print("URL to crawl: ", given_url)
-            if "localhost" in given_url:
-                domain_name = "http://localhost:"
-                given_url = domain_name + str(port)
-                geturls(given_url, domain_name, crawl)
-            else:
-                domain_name = urlparse(given_url).netloc
-                print("Normal website to test: ", domain_name)
-                geturls(given_url, domain_name, crawl)
+            #if "localhost" in given_url:
+                # domain_name = "http://localhost:"
+                # given_url = domain_name + str(port)
+                # print("Give url: ", given_url)
+                # geturls(given_url, domain_name, crawl)
+            #else:
+            domain_name = urlparse(given_url).netloc
+            print("Normal website to test: ", domain_name)
+            geturls(given_url, domain_name, crawl)
 
         elif opt in ("-lf", "--list_files"):
             print("TODO: List of files")            # TODO
