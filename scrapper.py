@@ -31,8 +31,11 @@ sys.setrecursionlimit(1500)
 
 # Checks whether url is a valid URL.
 def is_valid_link(url):
-    parsed = urlparse(url)
-    return bool(parsed.netloc), bool(parsed.scheme)
+    try:
+        parsed = urlparse(url)
+        return bool(parsed.netloc), bool(parsed.scheme)
+    except Exception as err:
+        print(f'Failed to parse url: {err}')
 
 # Returns all URLs that are found in a page - no matter if they are dead or not... we check it in the function geturls
 def get_links_from(url, domain_name):
@@ -112,7 +115,7 @@ def geturls(url, domain_name, crawl):
     if not path.exists("dead_links"):
         os.mkdir("dead_links")
     
-    with open(output_file, "a+") as f:
+    with open(output_file, "w+") as f:
         if not is_dead_link(url):
             links = get_links_from(url, domain_name)
             print("\nlinks: ", links)
