@@ -26,7 +26,7 @@ url_queue = set()
 url_visited = {}
 dead_links = set()
 
-node_path = "node_server/" 
+node_path = "html/" 
 
 sys.setrecursionlimit(1500)
 
@@ -173,15 +173,28 @@ def is_dead_link(link: str) -> bool:
         print('URL request == Success!')
         return False
 
-# Fucntion to process the stdin, return...
-def process_stdin(stdin):
+# Function to process the stdin, return...
+def process_stdin(stdin, option):
+    given_url : str = "http://localhost"
     buffer = ""
-   # for li in stdin:
-   #     buffer = buffer + li
-    for chunk in iter(lambda: fp.read(stdin), ''):
-        buffer = buffer + chunk
-
-    print(buffer)
+    file_counter = 0
+    documents = []
+    for li in stdin:
+        if option == "lsites":
+            print("TODO list of sites")
+        if option == "stdin_file":
+            # if it fins an end of line
+            if li is None:
+                documents.append(buffer)
+            buffer = ""
+            buffer = buffer + li
+    documents.append(buffer)
+    for doc in documents:
+        print(doc)
+        with open('html/index.html', 'w') as filehandle:
+            filehandle.write(buffer)
+        domain_name = urlparse(given_url).netloc
+        geturls(given_url, domain_name, 1)
 
 #Function that receive a list of websites and process them.
 def process_lwebsites(input_file, given_url, crawl):
@@ -191,7 +204,7 @@ def process_lwebsites(input_file, given_url, crawl):
         for url in info:
             domain_name = urlparse(url).netloc
             print("Normal website to test: ", domain_name)
-            geturls(given_url, domain_name, crawl)
+            geturls(given_url, domain_name, 1)
 
 #Function that prints a message and exit of the application
 def printandexit(message):
@@ -214,7 +227,6 @@ def main(argv):
     badargument_message_url = "The only option to be use with -u, --url is --crawl, -c"
     badargument_message_lwebsite = "The only option  -l, --lwebsite is provide a list of websites, shouldnt be used with other parameter"
 
-    badargument_message_stdin = "-S cannot be used with file "
     try:
         opts, args = getopt.getopt(argv,"h:u:c:f:w:Sl:",['help', 'url=', 'crawl=', 'file=', 'lfiles=', 'stdin=', 'lwebsite='])
     except getopt.GetoptError:
@@ -261,7 +273,7 @@ def main(argv):
             domain_name = urlparse(given_url).netloc
             print("Normal website to test: ", domain_name)
         elif opt in ("-S", "--Stdin"):
-            print("SIMIONAAAAAAA!!!!!!")
+            print("")
             stdin = 1
         elif opt in ("-w", "--lwebsite"):
             print("TODO: List of websites")         # TODO
@@ -298,7 +310,8 @@ def main(argv):
         domain_name = "http://localhost:"
         given_url = domain_name + str(port)
         crawl = 0
-        process_stdin(sys.stdin)
+        option= "stdin_file"
+        process_stdin(sys.stdin, option)
     if urlselected == 1:
         geturls(given_url, domain_name, crawl)
 #    filename = os.fsdecode(currentPath)
