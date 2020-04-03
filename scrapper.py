@@ -7,7 +7,6 @@ Students:
     Javier Rosales Tovar
     Xiaowei Chen
 """
-
 from urllib.request import urlparse, urljoin
 import urllib.error
 import sys
@@ -22,9 +21,8 @@ from os import path
 from typing import Dict, Tuple, Sequence, Set
 
 url_queue = set()
-
-url_visited = {}
 dead_links = set()
+url_visited = {}
 
 node_path = "html/" 
 
@@ -151,6 +149,7 @@ def geturls(url: str, domain_name: str, crawl: bool, is_file: bool) -> None:
                     print("\n\n******************* Finished crawling all links and sublinks *******************")
                     print("Number of visited links: ", len(url_visited.keys()))                  # number of visited links
                     print("Number of dead links: ", len(dead_links))                             # number of dead links
+                    print("\n\n")
                 else:
                     geturls(url=url, domain_name=domain_name, crawl=crawl, is_file=0)           # is_file will always be 0 here because we cannot crawl file
             except Exception as err:
@@ -159,6 +158,7 @@ def geturls(url: str, domain_name: str, crawl: bool, is_file: bool) -> None:
             print("\n\n******************* Finished crawling all links and sublinks *******************")
             print("Number of visited links: ", len(url_visited.keys()))                  # number of visited links
             print("Number of dead links: ", len(dead_links))                             # number of dead links
+            print("\n\n")
 
 # if is dead link, return True
 def is_dead_link(link: str) -> bool:
@@ -294,7 +294,7 @@ def main(argv):
 
     if lwebsite == 1:
         crawl = 0
-        process_lwebsites(input_file=input_file, given_url=given_url, crawl=crawl)          # TODO Confirm: It's not always localhost, can be a list of normal websites. So, we cannot decide crawl and given url here. Treating that inside the function. File with list of normal websites: NOT OK / File with 1 localhost : TODO
+        process_lwebsites(input_file=input_file, given_url=given_url, crawl=crawl)
 
     if lfiles == 1:
         crawl = 0
