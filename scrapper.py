@@ -70,32 +70,13 @@ def get_links_from(url: str, domain_name: str) -> set:
                 else:
                     href = urljoin(url, href)
 
-                # if message, skip
-                # if href.find("javascript") != -1:
-                #     print("javascript")
-                #     continue
-                # # if not http/https, skip
-                # if not (href.startswith("http") or href.startswith("https")):
-                #     print("not http: ", href)
-                #     continue
-                # # if not valid link, skip
-                # if not is_valid_link(href):
-                #     print("not valid link: " + href)
-                #     continue
-
-                # remove parameters from absolute url
-                # to avoid same url, but different parameters
                 parsed_href = urlparse(href)
-                #href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
-               # print("parsed_href.netloc:", parsed_href.netloc)
-                #print("domain_name:", domain_name)
 
                 # if not in the same domain, skip
                 if not parsed_href.netloc == domain_name:
                     print("Not the same domain name: "+ href)
                     continue
                 else:       # same domain, valid link
-                    # add links to set
                     if is_valid_link(href):
                         links.add(href)
         else:
@@ -104,7 +85,6 @@ def get_links_from(url: str, domain_name: str) -> set:
     except Exception as err:
         print ("Error occurred during BeautifulSoup parsing:", err)
     
-
     return links
 
 # Gets all the urls in the page and the urls inside it
@@ -176,7 +156,6 @@ def geturls(url: str, domain_name: str, crawl: bool) -> None:
         print("Number of visited links: ", len(url_visited.keys()))                  # number of visited links
         print("Number of dead links: ", len(dead_links))                             # number of dead links
 
-
 # if is dead link, return True
 def is_dead_link(link: str) -> bool:
     try:
@@ -214,7 +193,7 @@ def process_stdin(stdin, option):
         domain_name = urlparse(given_url).netloc
         geturls(given_url, domain_name, 1)
 
-#Function that receive a list of websites and process them.
+# Function that receive a list of websites and process them.
 def process_lwebsites(input_file, given_url, crawl):
     print("Input file: ", input_file)
     print("Given url: ", given_url)
@@ -228,22 +207,13 @@ def process_lwebsites(input_file, given_url, crawl):
             if "localhost" in url:
                 geturls(given_url, domain_name, 0)
             else:
-                geturls(url, domain_name, 1)
+                geturls(url, domain_name, crawl)
 
 #Function that prints a message and exit of the application
 def printandexit(message):
     print(message)
     sys.exit(2)
 
-
-# - your script accept an argument to tel what url to use (1 point) - ok
-# - your script accept argument to check a local file to parse. there cannot be any crawling here since there is no domain. (1 point) - ok
-# - your script accept argument to activate/desactivate crawling. (same as doing a search with a depth of 1) (1 point) - ok
-# - your script accept data in stdin in the 3 following form (2 point) :
-    # - the std:in can receive an HTML page to parse and check. - ok
-    # - the std:in can receive a list of website to check - TODO
-    # - the std:in can receive a list of file to check - TODO
-    # - an argument can be used to choose the form of data expected in std:in. - ok
 def main(argv):
     ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -282,7 +252,7 @@ def main(argv):
             fname = ntpath.basename(arg)
             try:
                 dst = node_path + "index.html"
-                copyfile(arg, dst)                  # TODO - we have to test with the node server
+                copyfile(arg, dst)                      
             except IOError:
                 print("Please choose a valid file path")
                 sys.exit()
@@ -304,7 +274,7 @@ def main(argv):
             lwebsite = 1
 
         elif opt in ("-l", "--lfiles"):
-            print("TODO: List of files")                    # TODO Function   
+            print("TODO: List of files")                    # TODO Function. Do it similar to the list of websites   
        
         else:
             print("Parameter not recognized: %s !\n" % opt)
@@ -320,10 +290,8 @@ def main(argv):
         crawl = 0
         process_lwebsites(input_file, given_url, crawl)          # TODO Confirm: It's not always localhost, can be a list of normal websites. So, we cannot decide crawl and given url here. Treating that inside the function. File with list of normal websites: NOT OK / File with 1 localhost : TODO
     
-    if fselect == 1:                                            # TODO Confirm: Always localhost? Can it be any html file anywhere? Didnt test yet
-        domain_name = "http://localhost:"
-        given_url = domain_name + str(port)
-        crawl = 0                                               # TODO FUNCTION
+    if fselect == 1:                                        # TODO: Test: -f name of file
+        crawl = 0                                              
     
     if stdin == 1:
         domain_name = "http://localhost:"
@@ -332,11 +300,12 @@ def main(argv):
         option= "stdin_file"
         process_stdin(sys.stdin, option)
     
-    if urlselected == 1:                                # TODO Confirm: for localhost to work better with link validations in the other functions, it's better to pass the port in the url. Here it's working like this. Otherwise, it fails somewhere. time python3 scrapper.py -u http://localhost:3000
+    if urlselected == 1:              
+    # TODO: Add by default http://localhost:3000 if the user doesnt add this
         if "localhost" not in given_url:
-            geturls(given_url, domain_name, 1)          # TODO Confirm: the url can be a localhost too....      # TESTED: URL OK
-        else:
-            geturls(given_url, given_url, 0)                                                                    # TESTED: LOCALHOST OK. PROBLEM - CONFIRM: When balthazar website is in localhost, it doesnt find dead links... maybe because we dont crawl?
+            geturls(given_url, domain_name, crawl)          
+        else: #For localhost, it needs to pass the port. Eg: time python3 scrapper.py -u http://localhost:3000
+            geturls(given_url, given_url, 0)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
