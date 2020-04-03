@@ -202,11 +202,10 @@ def process_lwebsites(input_file: str, given_url: str, crawl: bool) -> None:
         info = f.readlines()
         for url in info:
             url = url.replace("\n", "").replace("\t", "").strip()
-            print("Processing url: ", url)
             domain_name = urlparse(url).netloc
             if "localhost" in url:
                 crawl = 0
-                geturls(url=given_url, domain_name=domain_name, crawl=crawl, is_file=0)
+                geturls(url=url, domain_name=domain_name, crawl=crawl, is_file=0)
             else:
                 geturls(url=url, domain_name=domain_name, crawl=crawl, is_file=0)
 
