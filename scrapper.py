@@ -112,6 +112,7 @@ def geturls(url: str, domain_name: str, crawl: bool) -> None:
     
     print("url: ", url)
     print("domain name: ", domain_name)
+    print("crawl: ", crawl)
     print("\n\n")
 
     output_file : str = "dead_links/dead_links_" + domain_name + ".txt"
@@ -150,16 +151,18 @@ def geturls(url: str, domain_name: str, crawl: bool) -> None:
         
     # Checking sublinks of the links found in the main page
     if crawl == 1:
-        url = url_queue.pop()
-        if len(url_queue) == 0:
-            print("\n\n******************* Finished crawling all links and sublinks *******************")
-            print("Number of visited links: ", len(url_visited.keys()))                  # number of visited links
-            print("Number of dead links: ", len(dead_links))                             # number of dead links
-        else:
-            geturls(url, domain_name, crawl)
+        try: 
+            url = url_queue.pop()
+            if len(url_queue) == 0:
+                print("\n\n******************* Finished crawling all links and sublinks *******************")
+                print("Number of visited links: ", len(url_visited.keys()))                  # number of visited links
+                print("Number of dead links: ", len(dead_links))                             # number of dead links
+            else:
+                geturls(url, domain_name, crawl)
+        except Exception as err:
+            print ("Error occurred during popping queue of websites:", err)
 
-  # if is dead link, return True and write to file
-
+# if is dead link, return True
 def is_dead_link(link: str) -> bool:
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'}  
@@ -199,12 +202,18 @@ def process_stdin(stdin, option):
 #Function that receive a list of websites and process them.
 def process_lwebsites(input_file, given_url, crawl):
     print("Input file: ", input_file)
+    print("Given url: ", given_url)
+    print("Crawl:  ", crawl)
+
     with open(input_file, "r") as f:
         info = f.readlines()
         for url in info:
+            print("Processing url: ", url)
             domain_name = urlparse(url).netloc
-            print("Normal website to test: ", domain_name)
-            geturls(given_url, domain_name, 1)
+            if "localhost" in url:
+                geturls(given_url, domain_name, 0)
+            else:
+                geturls(url, domain_name, 1)
 
 #Function that prints a message and exit of the application
 def printandexit(message):
@@ -239,6 +248,7 @@ def main(argv):
     fselect : bool = 0
     stdin : bool = 0
     given_url : str = "http://localhost"
+    
     for opt, arg in opts:
 
         if opt == '-h':                         # help message
@@ -249,6 +259,7 @@ def main(argv):
                 crawl = 1
             if arg == "off":
                 crawl = 0
+    
         elif opt in ("-f", "--file"):             # File path to parse
             fselect = 1
             crawl = 0                             # There is no crawling here, since there is no domain
@@ -260,6 +271,7 @@ def main(argv):
             except IOError:
                 print("Please choose a valid file path")
                 sys.exit()
+    
         elif opt in ("-u", "--url"):                 # url to crawl, decide whether it's a normal website or localhost
             urlselected = 1
             given_url = arg
@@ -272,9 +284,11 @@ def main(argv):
             #else:
             domain_name = urlparse(given_url).netloc
             print("Normal website to test: ", domain_name)
+       
         elif opt in ("-S", "--Stdin"):
             print("")
             stdin = 1
+       
         elif opt in ("-w", "--lwebsite"):
             print("TODO: List of websites")         # TODO
             print("arg: ", arg)
@@ -301,7 +315,7 @@ def main(argv):
 
     if lwebsite == 1:
         crawl = 0
-        process_lwebsites(input_file, given_url, crawl)
+        process_lwebsites(input_file, given_url, crawl)          # TODO Confirm: It's not always localhost, can be a list of normal websites. So, we cannot decide crawl and given url here
     if fselect == 1:
         domain_name = "http://localhost:"
         given_url = domain_name + str(port)
