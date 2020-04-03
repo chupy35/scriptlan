@@ -173,21 +173,38 @@ def process_stdin(stdin, option):
     documents = []
     for li in stdin:
         if option == "lsites":
+            # if it finds an end of line
+            buffer = ""
+            buffer = buffer + li
             print("TODO list of sites")
         if option == "stdin_file":
-            # if it fins an end of line
+            # if it finds an end of line
             if li is None:
                 documents.append(buffer)
             buffer = ""
             buffer = buffer + li
-    print(buffer)
-    documents.append(buffer)
-    for doc in documents:
-        print(doc)
-        with open('html/index.html', 'w') as filehandle:
+            if option == "path":
+                
+
+    if option == "lsites":
+        given_url = ""
+        input_file = "lsites.txt"
+        with open(file, 'w') as filehandle:
             filehandle.write(buffer)
-        domain_name = urlparse(given_url).netloc
-        geturls(url=given_url, domain_name=domain_name, crawl=1, is_file=0)     # TODO: @Javier, please verify if the value of is_file is correct here
+        process_lwebsites(input_file, given_url, 1)
+
+    if option == "stdin_file":
+        print(buffer)
+        documents.append(buffer)
+        for doc in documents:
+            print(doc)
+            file = 'index.html'
+            with open(file, 'w') as filehandle:
+                filehandle.write(buffer)
+            domain_name = file
+        geturls(url=file, domain_name=domain_name, crawl=0, is_file=1)
+
+
 
 # Function that receives a list of websites and process them.
 def process_lwebsites(input_file: str, given_url: str, crawl: bool) -> None:
@@ -265,7 +282,6 @@ def main(argv):
             domain_name = urlparse(given_url).netloc
        
         elif opt in ("-S", "--Stdin"):
-            print("")
             stdin = 1
        
         elif opt in ("-w", "--lwebsite"):
