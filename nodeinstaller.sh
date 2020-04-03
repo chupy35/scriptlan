@@ -10,12 +10,6 @@
 github=""
 port=3000
 
-has_provided_arguments=0
-need_help=0
-has_provided_git_url=0
-has_valid_git_url=0
-has_valid_port=0
-
 
 help_msg="nodeinstaller.sh -g [github repository] -p [port]"
 #lack_git_url_msg="please use nodeinstaller.sh -g [url] to specify a git repository"
@@ -26,7 +20,7 @@ lack_valid_port_msg="please provide a valid port"
 
 
 process_petition() {
-#    echo "git url: $1, port: $2"
+    echo "git url: $1, port: $2"
 #    # install python dependency
     pip3 install -r requirements.txt
 
@@ -60,14 +54,14 @@ echo_err() {
   echo -e "\033[1;31m ERROR! "$1" \033[0m"
 }
 
-# is git url provided from arguments
+## is git url provided from arguments
 is_git_url_provided() {
   if [ "$1" == ""  ]
   then
-    has_provided_git_url=0
     echo_err "$lack_git_url_msg"
+    return 1
   else
-    has_provided_git_url=1
+    return 0
   fi
 }
 
@@ -78,29 +72,30 @@ is_valid_git_url() {
   # include error message
   if [[ "$output" = *fatal* ]]
   then
-    has_valid_git_url=0
     echo_err "$lack_valid_url_msg"
+    return 1
   else
-    has_valid_git_url=1
+    # reuturn true
+    return 0
   fi
 }
 
 # check if port is valid
 is_valid_port() {
-  has_valid_port=0
   # if port is a number
   if [ "$1" -gt 0 ] 2>/dev/null
   then
     # if port is a number in [0, 65535]
     if (($1>=0 && $1<=65535))
     then
-      has_valid_port=1
-#      echo "valid port"
+      return 0
     else
       echo_err "$lack_valid_port_msg"
+      return 1
     fi
   else
     echo_err "$lack_valid_port_msg"
+    return 1
   fi
 }
 
@@ -108,97 +103,72 @@ is_valid_port() {
 has_arguments() {
   if [ $1 -eq 0 ]
   then
-    has_provided_arguments=0
     echo_err "$no_argument_msg"
     echo "$help_msg"
+    return 1
   else
-    has_provided_arguments=1
+    # pass 0 for true
+    return 0
   fi
 }
 
-# contains help requirement in command line
-is_help_needed() {
-  if [ "$1" == "--help" ] || [ "$1" == "-h" ] ||
-     [ "$2" == "--help" ] || [ "$2" == "-h" ] ||
-     [ "$3" == "--help" ] || [ "$3" == "-h" ] ||
-     [ "$4" == "--help" ] || [ "$4" == "-h" ]
+
+previous_argument=""
+is_help_needed=1
+
+if has_arguments $#
+then
+  for arg in "$@"
+  do
+    # extract the previous argument
+    if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]
+    then
+      previous_argument="help"
+      is_help_needed=0
+    fi
+    if [ "$arg" == "--git" ] || [ "$arg" == "-g" ]
+    then
+       previous_argument="git"
+    fi
+    if [ "$arg" == "--port" ] || [ "$arg" == "-p" ]
+    then
+       previous_argument="port"
+    fi
+
+    # extract git url and port
+    if [ "$arg" != "" ]
+    then
+      if [ "$previous_argument" == "git" ]
+      then
+        github="$arg"
+      fi
+      if [ "$previous_argument" == "port" ]
+      then
+       port="$arg"
+      fi
+    fi
+
+  done
+
+  if [ $is_help_needed == 0 ]
   then
-    need_help=1
     echo "$help_msg"
   else
-    need_help=0
-  fi
-}
-
-# extract git url from command line
-extract_git_url() {
-  if [ "$1" == "--git" ] || [ "$1" == "-g" ]
-  then
-    github=$2
-  fi
-  if [ "$3" == "--git" ] || [ "$3" == "-g" ]
-  then
-    github=$4
-  fi
-#  echo "extracted git url: $github"
-}
-
-
-# extract prot from command line
-extract_port() {
-  if [ "$1" == "--port" ] || [ "$1" == "-p" ]
-  then
-  port=$2
-  fi
-  if [ "$3" == "--port" ] || [ "$3" == "-p" ]
-  then
-  port=$4
-  fi
-#  echo "extracted port: $port"
-}
-
-
-# if no arguments provided, stop
-  # if no git url provided, stop
-    # if no valid git url provided, stop
-       # if all satisfy, run ...
-extract_arguments() {
-  is_help_needed $1 $2 $3 $4
-  if [ $need_help -eq 0 ]
-  then
-#    echo "do not need help"
-    extract_git_url $1 $2 $3 $4
-    extract_port $1 $2 $3 $4
-    is_git_url_provided "$github"
-    if [ $has_provided_git_url -eq 1 ]
+    if is_git_url_provided "$github"
     then
-#      echo "has git url provided"
-      is_valid_git_url "$github"
-      if [ $has_valid_git_url -eq 1 ]
+      if is_valid_git_url "$github"
       then
-#        echo "has valid git url"
-#        echo "git: $github port: $port"
-        is_valid_port "$port"
-        if [ $has_valid_port -eq 1 ]
+        if is_valid_port "$port"
         then
-#          echo "successfully~~~~~~~~~~"
-          process_petition $github $port
+          echo "correct~~~ github: $github, correct~~~ port: $port"
+          process_petition "$github" "$port"
         fi
       fi
     fi
   fi
-}
 
-process() {
-  has_arguments $1
-  if [ $has_provided_arguments -eq 1 ]
-  then
-#    echo "has arguments~"
-    extract_arguments $2 $3 $4 $5
-  fi
-}
+fi
 
-process $# "$@"
 
 
 
