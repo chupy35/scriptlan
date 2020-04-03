@@ -86,7 +86,9 @@ def get_links_from(url: str, domain_name: str) -> set:
                 # remove parameters from absolute url
                 # to avoid same url, but different parameters
                 parsed_href = urlparse(href)
-                href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
+                #href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
+               # print("parsed_href.netloc:", parsed_href.netloc)
+                #print("domain_name:", domain_name)
 
                 # if not in the same domain, skip
                 if not parsed_href.netloc == domain_name:
@@ -115,10 +117,16 @@ def geturls(url: str, domain_name: str, crawl: bool) -> None:
     print("crawl: ", crawl)
     print("\n\n")
 
-    output_file : str = "dead_links/dead_links_" + domain_name + ".txt"
+    output_file : str = "dead_links_" + domain_name + ".txt"
 
     if not path.exists("dead_links"):
         os.mkdir("dead_links")
+
+    if "localhost" in domain_name:
+        # doing this to match same domain in get_links_from function
+        domain_name = domain_name.replace("http://","").replace("https://","").replace("/","")
+        output_file = "dead_links/"+domain_name.replace("/", "_")
+        print("output_file: ", output_file)
     
     with open(output_file, "a+") as f:
         if not is_dead_link(url):
@@ -161,6 +169,11 @@ def geturls(url: str, domain_name: str, crawl: bool) -> None:
                 geturls(url, domain_name, crawl)
         except Exception as err:
             print ("Error occurred during popping queue of websites:", err)
+    else:
+        print("\n\n******************* Finished crawling all links and sublinks *******************")
+        print("Number of visited links: ", len(url_visited.keys()))                  # number of visited links
+        print("Number of dead links: ", len(dead_links))                             # number of dead links
+
 
 # if is dead link, return True
 def is_dead_link(link: str) -> bool:
@@ -315,24 +328,25 @@ def main(argv):
 
     if lwebsite == 1:
         crawl = 0
-        process_lwebsites(input_file, given_url, crawl)          # TODO Confirm: It's not always localhost, can be a list of normal websites. So, we cannot decide crawl and given url here
+        process_lwebsites(input_file, given_url, crawl)          # TODO Confirm: It's not always localhost, can be a list of normal websites. So, we cannot decide crawl and given url here. Treating that inside the function
+    
     if fselect == 1:
         domain_name = "http://localhost:"
         given_url = domain_name + str(port)
         crawl = 0
+    
     if stdin == 1:
         domain_name = "http://localhost:"
         given_url = domain_name + str(port)
         crawl = 0
         option= "stdin_file"
         process_stdin(sys.stdin, option)
+    
     if urlselected == 1:
-        geturls(given_url, domain_name, crawl)
-#    filename = os.fsdecode(currentPath)
-#    print(filename)
-#    if filename and allowed_file(filename):
-#    else:
-#        pass
+        if "localhost" not in given_url:
+            geturls(given_url, domain_name, 1)          # TODO Confirm: the url can be a localhost too....      # TESTED: URL OK
+        else:
+            geturls(given_url, given_url, 0)                                                                    # TESTED: LOCALHOST OK
 
 if __name__ == "__main__":
     main(sys.argv[1:])
