@@ -329,7 +329,7 @@ def main(argv):
         option= "stdin_file"
         process_stdin(sys.stdin, option)
     
-    if urlselected == 1:                                # TODO Confirm: for localhost to work better with link validations in the other functions, it's better to pass the port in the url. Here it's working like this. Otherwise, it fails somewhere
+    if urlselected == 1:                                # TODO Confirm: for localhost to work better with link validations in the other functions, it's better to pass the port in the url. Here it's working like this. Otherwise, it fails somewhere. time python3 scrapper.py -u http://localhost:3000
         if "localhost" not in given_url:
             geturls(given_url, domain_name, 1)          # TODO Confirm: the url can be a localhost too....      # TESTED: URL OK
         else:
