@@ -41,7 +41,6 @@ def is_valid_link(url: str) -> [bool, bool]:
 
 def parse_html (to_parse: str, is_file: bool, domain_name: str, url: str) -> set:
     links = set()       # distinct links in this url
-    print("is_file: ", is_file)
     try:
         soup = BeautifulSoup(to_parse, 'html.parser')
         tags_contain_href = soup.find_all(href=True)             # Checking for html tags that contain link and text
@@ -49,7 +48,6 @@ def parse_html (to_parse: str, is_file: bool, domain_name: str, url: str) -> set
         if len(tags_contain_href) > 0:
             for tag in tags_contain_href:
                 href = tag.attrs.get("href")
-                print("href: ", href)
 
                 # if href is absolute link
                 if href.startswith("http") or href.startswith("https"):
@@ -64,7 +62,6 @@ def parse_html (to_parse: str, is_file: bool, domain_name: str, url: str) -> set
 
                 # if not in the same domain, skip
                 if not parsed_href.netloc == domain_name:
-                    print("Not the same domain name: "+ href)
                     continue
                 else:       # same domain, valid link
                     if is_valid_link(url=href):
@@ -87,11 +84,9 @@ def get_links_from(url: str, domain_name: str, is_file: bool) -> set:
         except Exception as err:
             print(f'Error occurred during URL Request: {err}')
         else:
-            print('URL request == Success! ')
             links = parse_html(to_parse=r.text, is_file=0, domain_name=domain_name, url=url)
 
     elif is_file == 1:           # it's a file
-        print("IT'S A FILE - GETTING URLS")
         try:
             with open(url, "r") as html_file:
                 contents = html_file.read()
@@ -104,11 +99,6 @@ def get_links_from(url: str, domain_name: str, is_file: bool) -> set:
 def geturls(url: str, domain_name: str, crawl: bool, is_file: bool) -> None:
     print("\n\nGetting URLS...\n\n")
     url_visited[url] = True
-    
-    print("url: ", url)
-    print("domain name: ", domain_name)
-    print("crawl: ", crawl)
-    print("\n\n")
 
     output_file : str = "dead_links_" + domain_name + ".txt"
 
@@ -120,45 +110,39 @@ def geturls(url: str, domain_name: str, crawl: bool, is_file: bool) -> None:
     if "localhost" in domain_name:
         # doing this to match same domain in get_links_from function
         domain_name = domain_name.replace("http://","").replace("https://","").replace("/","")
-        #output_file = "dead_links/"+"dead_links_"+domain_name.replace("/", "_")
         output_file = "dead_links/"+"dead_links_"+domain_name
-        print("output_file: ", output_file)
     
     with open(output_file, "a+") as f:
-
         if (is_file == 0) and (not is_dead_link(link=url)):             # it's a url and not a dead link
             links = get_links_from(url=url, domain_name=domain_name, is_file=is_file)
         elif (is_file == 0) and (is_dead_link(link=url)):               # it's a url and deadlink, add it to the set of dead link and return
             if url not in dead_links:
                 dead_links.add(url)
                 f.write("%s\n" % (url))
-                print("Dead link: ", url)
+                print("DEAD LINK: ", url)
                 return
         elif (is_file == 1):            # we are parsing a file
             links = get_links_from(url=url, domain_name=domain_name, is_file=is_file)
 
-        print("\nlinks: ", links)
-        print("\n")
         if len(links) > 0:
             for link in links:
                 print("\n\n")
-                print("TESTING LINK: ", link)
+                print("Testing link: ", link)
                 if link in url_visited:
                     print("IS URL VISITED: %s ||| %s " % (url_visited[link], link))
                 if not link in url_visited.keys():
-                    print("ok::::: URL NOT VISITED YET: ", link)
+                    print("URL NOT VISITED YET: ", link)
                 if not is_dead_link(link=link):
                     print("NOT A DEAD LINK")
                     url_queue.add(link)             # Has all valid links
                 else: 
-                    print("Dead link: ", link)
+                    print("DEAD LINK: ", link)
                     if link not in dead_links:
                         dead_links.add(link)
                         f.write("%s\n" % (link))
         else:
             print("No links were found in the website: ", url)
 
-        
         # Checking sublinks of the links found in the main page
         if crawl == 1:
             try: 
@@ -187,7 +171,6 @@ def is_dead_link(link: str) -> bool:
         print(f'Error occurred during URL Request: {err}')
         return True
     else:
-        print('URL request == Success!')
         return False
 
 # Function to process the stdin, return...
@@ -213,12 +196,8 @@ def process_stdin(stdin, option):
         domain_name = urlparse(given_url).netloc
         geturls(url=given_url, domain_name=domain_name, crawl=1, is_file=0)     # TODO: @Javier, please verify if the value of is_file is correct here
 
-# Function that receive a list of websites and process them.
+# Function that receives a list of websites and process them.
 def process_lwebsites(input_file: str, given_url: str, crawl: bool) -> None:
-    print("Input file: ", input_file)
-    print("Given url: ", given_url)
-    print("Crawl:  ", crawl)
-
     with open(input_file, "r") as f:
         info = f.readlines()
         for url in info:
@@ -230,11 +209,8 @@ def process_lwebsites(input_file: str, given_url: str, crawl: bool) -> None:
             else:
                 geturls(url=url, domain_name=domain_name, crawl=crawl, is_file=0)
 
-def process_lfiles(input_file: str, crawl: bool, is_file: bool):
-    print("input file: ", input_file)
-    print("crawl: ", crawl)
-    print("is_file: ", is_file)
-
+# Function that receives a list of files and process them
+def process_lfiles(input_file: str, crawl: bool, is_file: bool) -> None:    
     with open(input_file, "r") as f:
         info = f.readlines()
         for file_name in info:
@@ -242,10 +218,8 @@ def process_lfiles(input_file: str, crawl: bool, is_file: bool):
             print("Processing file: ", file_name)
             geturls(url=file_name, domain_name="", crawl=crawl, is_file=1)
 
-
-
-#Function that prints a message and exit of the application
-def printandexit(message):
+# Function that prints a message and exit of the application
+def printandexit(message) -> None:
     print(message)
     sys.exit(2)
 
@@ -271,7 +245,6 @@ def main(argv):
     given_url : str = "http://localhost"
     
     for opt, arg in opts:
-
         if opt == '-h':                         # help message
             printandexit(message=help_message)
        
@@ -306,7 +279,6 @@ def main(argv):
             lwebsite = 1
 
         elif opt in ("-l", "--lfiles"):
-            print("TODO: List of files")                    # TODO Function. Do it similar to the list of websites   
             input_file = arg
             lfiles = 1
        
@@ -341,7 +313,7 @@ def main(argv):
     if urlselected == 1:              
         if "localhost" not in given_url:
             geturls(url=given_url, domain_name=domain_name, crawl=crawl, is_file=0)          
-        else: # For localhost, it needs to pass the port. Eg: time python3 scrapper.py -u http://localhost:3000
+        else:   # For localhost, it needs to pass the port. Eg: time python3 scrapper.py -u http://localhost:3000
             crawl = 0 
             geturls(url=given_url, domain_name=given_url, crawl=crawl, is_file=0)
 
