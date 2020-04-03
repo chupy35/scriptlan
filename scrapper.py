@@ -201,6 +201,7 @@ def process_lwebsites(input_file: str, given_url: str, crawl: bool) -> None:
     with open(input_file, "r") as f:
         info = f.readlines()
         for url in info:
+            url = url.replace("\n", "").replace("\t", "").strip()
             print("Processing url: ", url)
             domain_name = urlparse(url).netloc
             if "localhost" in url:
