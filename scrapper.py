@@ -206,6 +206,7 @@ def process_stdin(stdin, option):
                 documents.append(buffer)
             buffer = ""
             buffer = buffer + li
+    print(buffer)
     documents.append(buffer)
     for doc in documents:
         print(doc)
@@ -323,7 +324,7 @@ def main(argv):
     if fselect == 1:                                            # TODO Confirm: Always localhost? Can it be any html file anywhere? Didnt test yet
         domain_name = "http://localhost:"
         given_url = domain_name + str(port)
-        crawl = 0                                               # TODO FUNCTION
+        crawl = 0                                               # DONE FUNCTION - its just copyng the file to the html folder
     
     if stdin == 1:
         domain_name = "http://localhost:3000/"
