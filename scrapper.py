@@ -214,7 +214,7 @@ def process_stdin(stdin, option):
         geturls(url=given_url, domain_name=domain_name, crawl=1, is_file=0)     # TODO: @Javier, please verify if the value of is_file is correct here
 
 # Function that receive a list of websites and process them.
-def process_lwebsites(input_file, given_url, crawl):
+def process_lwebsites(input_file: str, given_url: str, crawl: bool) -> None:
     print("Input file: ", input_file)
     print("Given url: ", given_url)
     print("Crawl:  ", crawl)
@@ -229,6 +229,20 @@ def process_lwebsites(input_file, given_url, crawl):
                 geturls(url=given_url, domain_name=domain_name, crawl=crawl, is_file=0)
             else:
                 geturls(url=url, domain_name=domain_name, crawl=crawl, is_file=0)
+
+def process_lfiles(input_file: str, crawl: bool, is_file: bool):
+    print("input file: ", input_file)
+    print("crawl: ", crawl)
+    print("is_file: ", is_file)
+
+    with open(input_file, "r") as f:
+        info = f.readlines()
+        for file_name in info:
+            file_name = file_name.replace("\n", "").replace("\t", "").strip()
+            print("Processing file: ", file_name)
+            geturls(url=file_name, domain_name="", crawl=crawl, is_file=1)
+
+
 
 #Function that prints a message and exit of the application
 def printandexit(message):
@@ -250,6 +264,7 @@ def main(argv):
     port : int = 3000
     crawl : bool = 1
     lwebsite : bool = 0
+    lfiles : bool = 0
     urlselected : bool = 0
     fselect : bool = 0
     stdin : bool = 0
@@ -266,18 +281,12 @@ def main(argv):
             if arg == "off":
                 crawl = 0
     
-        elif opt in ("-f", "--file"):             # File path to parse - # TODO: Test: -f name of file
-            print("It's a file!")
+        elif opt in ("-f", "--file"):             # File path to parse
             fselect = 1
             crawl = 0                             # There is no crawling here, since there is no domain
             file_path = arg
-            print("File path: ", file_path)
             fname = ntpath.basename(arg)
-            print("fname: ", fname)
             try:
-                dst = node_path + "index.html"
-                print("dest: ", dst)
-                copyfile(arg, dst)                      # TODO @Javier: Why do we need to do that? I'm using the path that the user passed on the command line
                 geturls(url=file_path, domain_name="", crawl=crawl, is_file=1)  
             except IOError:
                 print("Please choose a valid file path")
@@ -298,6 +307,8 @@ def main(argv):
 
         elif opt in ("-l", "--lfiles"):
             print("TODO: List of files")                    # TODO Function. Do it similar to the list of websites   
+            input_file = arg
+            lfiles = 1
        
         else:
             print("Parameter not recognized: %s !\n" % opt)
@@ -312,6 +323,10 @@ def main(argv):
     if lwebsite == 1:
         crawl = 0
         process_lwebsites(input_file=input_file, given_url=given_url, crawl=crawl)          # TODO Confirm: It's not always localhost, can be a list of normal websites. So, we cannot decide crawl and given url here. Treating that inside the function. File with list of normal websites: NOT OK / File with 1 localhost : TODO
+
+    if lfiles == 1:
+        crawl = 0
+        process_lfiles(input_file=input_file, crawl=crawl, is_file=1) 
     
     if fselect == 1:                                            
         crawl = 0                                              
