@@ -280,7 +280,7 @@ def main(argv):
             fname = ntpath.basename(arg)
             try:
                 dst = node_path + "index.html"
-                copyfile(arg, dst)              #DONE but we have to test with the node server
+                copyfile(arg, dst)                  # TODO - we have to test with the node server
             except IOError:
                 print("Please choose a valid file path")
                 sys.exit()
@@ -288,13 +288,6 @@ def main(argv):
         elif opt in ("-u", "--url"):                 # url to crawl, decide whether it's a normal website or localhost
             urlselected = 1
             given_url = arg
-            print("URL to crawl: ", given_url)
-            #if "localhost" in given_url:
-                # domain_name = "http://localhost:"
-                # given_url = domain_name + str(port)
-                # print("Give url: ", given_url)
-                # geturls(given_url, domain_name, crawl)
-            #else:
             domain_name = urlparse(given_url).netloc
             print("Normal website to test: ", domain_name)
        
@@ -307,13 +300,7 @@ def main(argv):
             print("arg: ", arg)
             input_file = arg
             lwebsite = 1
-#            print("Input file: ", input_file)
-#            with open(input_file, "r") as f:
-#                info = f.readlines()
-#                for url in info:
-#                    domain_name = urlparse(url).netloc
-#                    print("Normal website to test: ", domain_name)
-#                    geturls(given_url, domain_name, crawl)
+
         elif opt in ("-l", "--lfiles"):
             print("TODO: List of files")            # TODO
         else:
@@ -342,11 +329,11 @@ def main(argv):
         option= "stdin_file"
         process_stdin(sys.stdin, option)
     
-    if urlselected == 1:
+    if urlselected == 1:                                # TODO Confirm: for localhost to work better with link validations in the other functions, it's better to pass the port in the url. Here it's working like this. Otherwise, it fails somewhere
         if "localhost" not in given_url:
             geturls(given_url, domain_name, 1)          # TODO Confirm: the url can be a localhost too....      # TESTED: URL OK
         else:
-            geturls(given_url, given_url, 0)                                                                    # TESTED: LOCALHOST OK
+            geturls(given_url, given_url, 0)                                                                    # TESTED: LOCALHOST OK. PROBLEM - CONFIRM: When balthazar website is in localhost, it doesnt find dead links... maybe because we dont crawl?
 
 if __name__ == "__main__":
     main(sys.argv[1:])
