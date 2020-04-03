@@ -6,9 +6,11 @@
 #	- le script bash doit partir le serveur node localement (npm start) en spécifiant le port (la variable d'environnement se nomme PORT)
 # - le script bash doit exécuter votre programme sur le serveur node local (http://localhost) en vérifiant le bon port.
 # - provided link: https://github.com/stevenvachon/broken-link-checker.git
+# - a link can run npm start https://github.com/tjmonsi/simple-node-server.git
 
 github=""
-port=3000
+# we provide an error port at the beginning
+port=65536
 
 
 help_msg="nodeinstaller.sh -g [github repository] -p [port]"
@@ -26,6 +28,7 @@ process_petition() {
 
     # check repo existence before git clone
     repo_folder="$(basename "$1" .git)"
+    echo "repoFolder:::: $repo_folder:::::"
     if [ ! -d "$repo_folder" ];
     then
       git clone $1
@@ -52,6 +55,7 @@ process_petition() {
 # make the error message shown in red color
 echo_err() {
   echo -e "\033[1;31m ERROR! "$1" \033[0m"
+  echo "$help_msg"
 }
 
 ## is git url provided from arguments
@@ -104,7 +108,6 @@ has_arguments() {
   if [ $1 -eq 0 ]
   then
     echo_err "$no_argument_msg"
-    echo "$help_msg"
     return 1
   else
     # pass 0 for true
@@ -120,35 +123,41 @@ if has_arguments $#
 then
   for arg in "$@"
   do
-    # extract the previous argument
+
     if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]
     then
       previous_argument="help"
       is_help_needed=0
     fi
+
     if [ "$arg" == "--git" ] || [ "$arg" == "-g" ]
     then
        previous_argument="git"
+    else
+      if [ "$previous_argument" == "git" ] && [ "$arg" != "" ]
+      then
+        previous_argument=""
+        github="$arg"
+      fi
     fi
+
     if [ "$arg" == "--port" ] || [ "$arg" == "-p" ]
     then
        previous_argument="port"
-    fi
-
-    # extract git url and port
-    if [ "$arg" != "" ]
-    then
-      if [ "$previous_argument" == "git" ]
+    else
+      if [ "$previous_argument" == "port" ] && [ "$arg" != "" ]
       then
-        github="$arg"
-      fi
-      if [ "$previous_argument" == "port" ]
-      then
-       port="$arg"
+        previous_argument=""
+        port="$arg"
       fi
     fi
 
   done
+
+#  echo "----------"
+#  echo "github::: $github"
+#  echo "port::: $port"
+#  echo "----------"
 
   if [ $is_help_needed == 0 ]
   then
