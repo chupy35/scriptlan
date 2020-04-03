@@ -40,51 +40,89 @@ def is_valid_link(url: str) -> [bool, bool]:
         return bool(0), bool(0)
 
 # Returns all URLs that are found in a page - no matter if they are dead or not... we check it in the function geturls
-def get_links_from(url: str, domain_name: str) -> set:
+def get_links_from(url: str, domain_name: str, is_file: bool) -> set:
     print("URL: ", url)
 
     links = set()       # distinct links in this url
 
-    # Requesting website
-    try:
-        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'}  
-        r = requests.get(url, headers=headers)
-        r.raise_for_status()                    # If the response was successful, no Exception will be raised
-    except Exception as err:
-        print(f'Error occurred during URL Request: {err}')
-    else:
-        print('URL request == Success! ', url)
-
-    # Parsing HTML
-    try: 
-        soup = BeautifulSoup(r.text, "html.parser")
-        tags_contain_href = soup.find_all(href=True)             # Checking for html tags that contain link and text
-    
-        if len(tags_contain_href) > 0:
-            for tag in tags_contain_href:
-                href = tag.attrs.get("href")
-
-                # if href is absolute link
-                if href.startswith("http") or href.startswith("https"):
-                    href = href
-                else:
-                    href = urljoin(url, href)
-
-                parsed_href = urlparse(href)
-
-                # if not in the same domain, skip
-                if not parsed_href.netloc == domain_name:
-                    print("Not the same domain name: "+ href)
-                    continue
-                else:       # same domain, valid link
-                    if is_valid_link(url=href):
-                        links.add(href)
+    if is_file == 0:                # if it's a url, I request the URL and parse the result of the results
+        # Requesting website
+        try:
+            headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'}  
+            r = requests.get(url, headers=headers)
+            r.raise_for_status()                    # If the response was successful, no Exception will be raised
+        except Exception as err:
+            print(f'Error occurred during URL Request: {err}')
         else:
-            print("No tags were identified when parsing the url: ", url)
+            print('URL request == Success! ', url)
 
-    except Exception as err:
-        print ("Error occurred during BeautifulSoup parsing:", err)
-    
+        # Parsing HTML
+        try: 
+            soup = BeautifulSoup(r.text, "html.parser")
+            tags_contain_href = soup.find_all(href=True)             # Checking for html tags that contain link and text
+        
+            if len(tags_contain_href) > 0:
+                for tag in tags_contain_href:
+                    href = tag.attrs.get("href")
+
+                    # if href is absolute link
+                    if href.startswith("http") or href.startswith("https"):
+                        href = href
+                    else:
+                        href = urljoin(url, href)
+
+                    parsed_href = urlparse(href)
+
+                    # if not in the same domain, skip
+                    #print("parsed_href.netloc: ", parsed_href.netloc)
+                    #print("domain name: ", domain_name)
+                    if not parsed_href.netloc == domain_name:
+                        print("Not the same domain name: "+ href)
+                        continue
+                    else:       # same domain, valid link
+                        if is_valid_link(url=href):
+                            links.add(href)
+            else:
+                print("No tags were identified when parsing the url: ", url)
+
+        except Exception as err:
+            print ("Error occurred during BeautifulSoup parsing:", err)
+   
+    elif is_file == 1:           # it's a file
+        print("IT'S A FILE - GETTING URLS")
+        with open(url, "r") as html_file:
+            contents = html_file.read()
+
+            try:
+                soup = BeautifulSoup(contents, 'html.parser')
+                tags_contain_href = soup.find_all(href=True)             # Checking for html tags that contain link and text
+        
+                if len(tags_contain_href) > 0:
+                    for tag in tags_contain_href:
+                        href = tag.attrs.get("href")
+
+                        # if href is absolute link
+                        if href.startswith("http") or href.startswith("https"):
+                            href = href
+                        else:
+                            href = urljoin(url, href)
+
+                            parsed_href = urlparse(href)
+
+                        # if not in the same domain, skip
+                        if not parsed_href.netloc == domain_name:
+                            print("Not the same domain name: "+ href)
+                            continue
+                        else:       # same domain, valid link
+                            if is_valid_link(url=href):
+                                links.add(href)
+                else:
+                    print("No tags were identified when parsing the url: ", url)
+
+            except Exception as err:
+                print ("Error occurred during BeautifulSoup parsing:", err)
+
+        
     return links
 
 # Gets all the urls in the page and the urls inside it
@@ -107,54 +145,61 @@ def geturls(url: str, domain_name: str, crawl: bool, is_file: bool) -> None:
     if "localhost" in domain_name:
         # doing this to match same domain in get_links_from function
         domain_name = domain_name.replace("http://","").replace("https://","").replace("/","")
-        output_file = "dead_links/"+domain_name.replace("/", "_")
+        #output_file = "dead_links/"+"dead_links_"+domain_name.replace("/", "_")
+        output_file = "dead_links/"+"dead_links_"+domain_name
         print("output_file: ", output_file)
     
     with open(output_file, "a+") as f:
-        if not is_dead_link(link=url):
-            links = get_links_from(url=url, domain_name=domain_name)
-            print("\nlinks: ", links)
-            print("\n")
-            if len(links) > 0:
-                for link in links:
-                    print("\n\n")
-                    print("TESTING LINK: ", link)
-                    if link in url_visited:
-                        print("IS URL VISITED: %s ||| %s " % (url_visited[link], link))
-                    if not link in url_visited.keys():
-                        print("ok::::: URL NOT VISITED YET: ", link)
-                        if not is_dead_link(link=link):
-                            print("NOT A DEAD LINK")
-                            url_queue.add(link)             # Has all valid links
-                        else: 
-                            print("Dead link: ", link)
-                            if link not in dead_links:
-                                dead_links.add(link)
-                                f.write("%s\n" % (link))
-            else:
-                print("No links were found in the website: ", url)
-        else:
+
+        if (is_file == 0) and (not is_dead_link(link=url)):             # it's a url and not a dead link
+            links = get_links_from(url=url, domain_name=domain_name, is_file=is_file)
+        elif (is_file == 0) and (is_dead_link(link=url)):               # it's a url and deadlink, add it to the set of dead link and return
             if url not in dead_links:
                 dead_links.add(url)
                 f.write("%s\n" % (url))
                 print("Dead link: ", url)
+                return
+        elif (is_file == 1):            # we are parsing a file
+            links = get_links_from(url=url, domain_name=domain_name, is_file=is_file)
+
+        print("\nlinks: ", links)
+        print("\n")
+        if len(links) > 0:
+            for link in links:
+                print("\n\n")
+                print("TESTING LINK: ", link)
+                if link in url_visited:
+                    print("IS URL VISITED: %s ||| %s " % (url_visited[link], link))
+                if not link in url_visited.keys():
+                    print("ok::::: URL NOT VISITED YET: ", link)
+                if not is_dead_link(link=link):
+                    print("NOT A DEAD LINK")
+                    url_queue.add(link)             # Has all valid links
+                else: 
+                    print("Dead link: ", link)
+                    if link not in dead_links:
+                        dead_links.add(link)
+                        f.write("%s\n" % (link))
+        else:
+            print("No links were found in the website: ", url)
+
         
-    # Checking sublinks of the links found in the main page
-    if crawl == 1:
-        try: 
-            url = url_queue.pop()
-            if len(url_queue) == 0:
-                print("\n\n******************* Finished crawling all links and sublinks *******************")
-                print("Number of visited links: ", len(url_visited.keys()))                  # number of visited links
-                print("Number of dead links: ", len(dead_links))                             # number of dead links
-            else:
-                geturls(url=url, domain_name=domain_name, crawl=crawl, is_file=0)           # is_file will always be 0 here because we cannot crawl file
-        except Exception as err:
-            print ("Error occurred during popping queue of websites:", err)
-    else:
-        print("\n\n******************* Finished crawling all links and sublinks *******************")
-        print("Number of visited links: ", len(url_visited.keys()))                  # number of visited links
-        print("Number of dead links: ", len(dead_links))                             # number of dead links
+        # Checking sublinks of the links found in the main page
+        if crawl == 1:
+            try: 
+                url = url_queue.pop()
+                if len(url_queue) == 0:
+                    print("\n\n******************* Finished crawling all links and sublinks *******************")
+                    print("Number of visited links: ", len(url_visited.keys()))                  # number of visited links
+                    print("Number of dead links: ", len(dead_links))                             # number of dead links
+                else:
+                    geturls(url=url, domain_name=domain_name, crawl=crawl, is_file=0)           # is_file will always be 0 here because we cannot crawl file
+            except Exception as err:
+                print ("Error occurred during popping queue of websites:", err)
+        else:
+            print("\n\n******************* Finished crawling all links and sublinks *******************")
+            print("Number of visited links: ", len(url_visited.keys()))                  # number of visited links
+            print("Number of dead links: ", len(dead_links))                             # number of dead links
 
 # if is dead link, return True
 def is_dead_link(link: str) -> bool:
@@ -250,15 +295,15 @@ def main(argv):
             print("It's a file!")
             fselect = 1
             crawl = 0                             # There is no crawling here, since there is no domain
-            print(arg)
+            file_path = arg
+            print("File path: ", file_path)
             fname = ntpath.basename(arg)
             print("fname: ", fname)
             try:
                 dst = node_path + "index.html"
                 print("dest: ", dst)
-                copyfile(arg, dst)              # TODO: WHY?         
-                geturls(url=given_url, domain_name=given_url, crawl=crawl, is_file=1)  
-
+                copyfile(arg, dst)                      # TODO @Javier: Why do we need to do that? I'm using the path that the user passed on the command line
+                geturls(url=file_path, domain_name="", crawl=crawl, is_file=1)  
             except IOError:
                 print("Please choose a valid file path")
                 sys.exit()
