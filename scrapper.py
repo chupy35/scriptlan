@@ -122,6 +122,8 @@ def geturls(url: str, domain_name: str, crawl: bool) -> None:
     if not path.exists("dead_links"):
         os.mkdir("dead_links")
 
+    output_file = "dead_links/"+output_file
+
     if "localhost" in domain_name:
         # doing this to match same domain in get_links_from function
         domain_name = domain_name.replace("http://","").replace("https://","").replace("/","")
@@ -296,13 +298,14 @@ def main(argv):
             stdin = 1
        
         elif opt in ("-w", "--lwebsite"):
-            print("TODO: List of websites")         # TODO
+            print("TODO: List of websites")         
             print("arg: ", arg)
             input_file = arg
             lwebsite = 1
 
         elif opt in ("-l", "--lfiles"):
-            print("TODO: List of files")            # TODO
+            print("TODO: List of files")                    # TODO Function   
+       
         else:
             print("Parameter not recognized: %s !\n" % opt)
             print(help_message)
@@ -315,12 +318,12 @@ def main(argv):
 
     if lwebsite == 1:
         crawl = 0
-        process_lwebsites(input_file, given_url, crawl)          # TODO Confirm: It's not always localhost, can be a list of normal websites. So, we cannot decide crawl and given url here. Treating that inside the function
+        process_lwebsites(input_file, given_url, crawl)          # TODO Confirm: It's not always localhost, can be a list of normal websites. So, we cannot decide crawl and given url here. Treating that inside the function. File with list of normal websites: NOT OK / File with 1 localhost : TODO
     
-    if fselect == 1:
+    if fselect == 1:                                            # TODO Confirm: Always localhost? Can it be any html file anywhere? Didnt test yet
         domain_name = "http://localhost:"
         given_url = domain_name + str(port)
-        crawl = 0
+        crawl = 0                                               # TODO FUNCTION
     
     if stdin == 1:
         domain_name = "http://localhost:"
