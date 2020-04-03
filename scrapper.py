@@ -95,7 +95,7 @@ def get_links_from(url: str, domain_name: str, is_file: bool) -> set:
 
 # Gets all the urls in the page and the urls inside it
 def geturls(url: str, domain_name: str, crawl: bool, is_file: bool) -> None:
-    print("\n\nGetting URLS...\n\n")
+    print("\n\nGetting URLS... %s \n\n" % (url))
     url_visited[url] = True
 
     output_file : str = "dead_links_" + domain_name + ".txt"
@@ -117,24 +117,16 @@ def geturls(url: str, domain_name: str, crawl: bool, is_file: bool) -> None:
             if url not in dead_links:
                 dead_links.add(url)
                 f.write("%s\n" % (url))
-                print("DEAD LINK: ", url)
                 return
         elif (is_file == 1):            # we are parsing a file
             links = get_links_from(url=url, domain_name=domain_name, is_file=is_file)
 
         if len(links) > 0:
             for link in links:
-                print("\n\n")
-                print("Testing link: ", link)
-                if link in url_visited:
-                    print("IS URL VISITED: %s ||| %s " % (url_visited[link], link))
-                if not link in url_visited.keys():
-                    print("URL NOT VISITED YET: ", link)
                 if not is_dead_link(link=link):
-                    print("NOT A DEAD LINK")
                     url_queue.add(link)             # Has all valid links
                 else: 
-                    print("DEAD LINK: ", link)
+                    print("It's a dead link\n")
                     if link not in dead_links:
                         dead_links.add(link)
                         f.write("%s\n" % (link))
@@ -202,6 +194,7 @@ def process_lwebsites(input_file: str, given_url: str, crawl: bool) -> None:
         info = f.readlines()
         for url in info:
             url = url.replace("\n", "").replace("\t", "").strip()
+            print("Processing URL: ", url)
             domain_name = urlparse(url).netloc
             if "localhost" in url:
                 crawl = 0
@@ -226,7 +219,7 @@ def printandexit(message) -> None:
 def main(argv):
     ssl._create_default_https_context = ssl._create_unverified_context
 
-    help_message = 'Usage: python scrapper.py \n -u, --url = url to crawl \n -c, --crawl [on/off]  = turn on or off crawl, default=on \n -f, --file [filepath] = a file path to parse, crawling deactivated in this option  \n -l --lfiles = list of files to check (each line of the file must be a different file) \n -w --lwebsite = list of websites to check (each line of the file must be a different website), crawl deactivated in this option\n'
+    help_message = 'Usage: python scrapper.py \n -u, --url = url to crawl \n -c, --crawl [on/off]  = turn on or off crawl, default=on \n -f, --file [filepath] = a file path to parse, crawling deactivated in this option  \n -l --lfiles = list of files to parse (each line of the file must be a different file) \n -w --lwebsite = list of websites to check (each line of the file must be a different website), crawling deactivated in this option. If localhost, the crawling is deactivated in this option\n'
     badargument_message_url = "The only option to be use with -u, --url is --crawl, -c"
     badargument_message_lwebsite = "The only option  -l, --lwebsite is provide a list of websites, shouldnt be used with other parameter"
 
