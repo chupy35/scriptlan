@@ -307,7 +307,7 @@ def main(argv):
         given_url = domain_name + str(port)
         crawl = 0
     if stdin == 1:
-        domain_name = "http://localhost:"
+        domain_name = "http://localhost:3000/"
         given_url = domain_name + str(port)
         crawl = 0
         option= "stdin_file"
