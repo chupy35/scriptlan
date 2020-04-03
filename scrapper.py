@@ -39,90 +39,65 @@ def is_valid_link(url: str) -> [bool, bool]:
         print(f'Failed to parse url: {err}')
         return bool(0), bool(0)
 
+def parse_html (to_parse: str, is_file: bool, domain_name: str, url: str) -> set:
+    links = set()       # distinct links in this url
+    print("is_file: ", is_file)
+    try:
+        soup = BeautifulSoup(to_parse, 'html.parser')
+        tags_contain_href = soup.find_all(href=True)             # Checking for html tags that contain link and text
+
+        if len(tags_contain_href) > 0:
+            for tag in tags_contain_href:
+                href = tag.attrs.get("href")
+                print("href: ", href)
+
+                # if href is absolute link
+                if href.startswith("http") or href.startswith("https"):
+                    href = href
+                else:
+                    if is_file == 0:        # if it's a website we "build" relative links
+                        href = urljoin(url, href)
+                    else:                   # if it's a file, we dont know the link
+                        href = ""
+
+                parsed_href = urlparse(href)
+
+                # if not in the same domain, skip
+                if not parsed_href.netloc == domain_name:
+                    print("Not the same domain name: "+ href)
+                    continue
+                else:       # same domain, valid link
+                    if is_valid_link(url=href):
+                        links.add(href)
+        else:
+            print("No tags were identified when parsing the url: ", url)
+
+    except Exception as err:
+        print ("Error occurred during BeautifulSoup parsing:", err)
+
+    return links
+
 # Returns all URLs that are found in a page - no matter if they are dead or not... we check it in the function geturls
 def get_links_from(url: str, domain_name: str, is_file: bool) -> set:
-    print("URL: ", url)
-
-    links = set()       # distinct links in this url
-
     if is_file == 0:                # if it's a url, I request the URL and parse the result of the results
-        # Requesting website
-        try:
+        try:        # Requesting website
             headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'}  
             r = requests.get(url, headers=headers)
             r.raise_for_status()                    # If the response was successful, no Exception will be raised
         except Exception as err:
             print(f'Error occurred during URL Request: {err}')
         else:
-            print('URL request == Success! ', url)
+            print('URL request == Success! ')
+            links = parse_html(to_parse=r.text, is_file=0, domain_name=domain_name, url=url)
 
-        # Parsing HTML
-        try: 
-            soup = BeautifulSoup(r.text, "html.parser")
-            tags_contain_href = soup.find_all(href=True)             # Checking for html tags that contain link and text
-        
-            if len(tags_contain_href) > 0:
-                for tag in tags_contain_href:
-                    href = tag.attrs.get("href")
-
-                    # if href is absolute link
-                    if href.startswith("http") or href.startswith("https"):
-                        href = href
-                    else:
-                        href = urljoin(url, href)
-
-                    parsed_href = urlparse(href)
-
-                    # if not in the same domain, skip
-                    #print("parsed_href.netloc: ", parsed_href.netloc)
-                    #print("domain name: ", domain_name)
-                    if not parsed_href.netloc == domain_name:
-                        print("Not the same domain name: "+ href)
-                        continue
-                    else:       # same domain, valid link
-                        if is_valid_link(url=href):
-                            links.add(href)
-            else:
-                print("No tags were identified when parsing the url: ", url)
-
-        except Exception as err:
-            print ("Error occurred during BeautifulSoup parsing:", err)
-   
     elif is_file == 1:           # it's a file
         print("IT'S A FILE - GETTING URLS")
-        with open(url, "r") as html_file:
-            contents = html_file.read()
-
-            try:
-                soup = BeautifulSoup(contents, 'html.parser')
-                tags_contain_href = soup.find_all(href=True)             # Checking for html tags that contain link and text
-        
-                if len(tags_contain_href) > 0:
-                    for tag in tags_contain_href:
-                        href = tag.attrs.get("href")
-
-                        # if href is absolute link
-                        if href.startswith("http") or href.startswith("https"):
-                            href = href
-                        else:
-                            href = urljoin(url, href)
-
-                            parsed_href = urlparse(href)
-
-                        # if not in the same domain, skip
-                        if not parsed_href.netloc == domain_name:
-                            print("Not the same domain name: "+ href)
-                            continue
-                        else:       # same domain, valid link
-                            if is_valid_link(url=href):
-                                links.add(href)
-                else:
-                    print("No tags were identified when parsing the url: ", url)
-
-            except Exception as err:
-                print ("Error occurred during BeautifulSoup parsing:", err)
-
-        
+        try:
+            with open(url, "r") as html_file:
+                contents = html_file.read()
+                links = parse_html(to_parse=contents, is_file=1, domain_name=domain_name, url=url)
+        except:
+            print(f'Error occurred during opening file: {err}')
     return links
 
 # Gets all the urls in the page and the urls inside it
