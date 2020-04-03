@@ -86,7 +86,9 @@ def get_links_from(url: str, domain_name: str) -> set:
                 # remove parameters from absolute url
                 # to avoid same url, but different parameters
                 parsed_href = urlparse(href)
-                href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
+                #href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
+               # print("parsed_href.netloc:", parsed_href.netloc)
+                #print("domain_name:", domain_name)
 
                 # if not in the same domain, skip
                 if not parsed_href.netloc == domain_name:
@@ -112,12 +114,21 @@ def geturls(url: str, domain_name: str, crawl: bool) -> None:
     
     print("url: ", url)
     print("domain name: ", domain_name)
+    print("crawl: ", crawl)
     print("\n\n")
 
-    output_file : str = "dead_links/dead_links_" + domain_name + ".txt"
+    output_file : str = "dead_links_" + domain_name + ".txt"
 
     if not path.exists("dead_links"):
         os.mkdir("dead_links")
+
+    output_file = "dead_links/"+output_file
+
+    if "localhost" in domain_name:
+        # doing this to match same domain in get_links_from function
+        domain_name = domain_name.replace("http://","").replace("https://","").replace("/","")
+        output_file = "dead_links/"+domain_name.replace("/", "_")
+        print("output_file: ", output_file)
     
     with open(output_file, "a+") as f:
         if not is_dead_link(url):
@@ -150,16 +161,23 @@ def geturls(url: str, domain_name: str, crawl: bool) -> None:
         
     # Checking sublinks of the links found in the main page
     if crawl == 1:
-        url = url_queue.pop()
-        if len(url_queue) == 0:
-            print("\n\n******************* Finished crawling all links and sublinks *******************")
-            print("Number of visited links: ", len(url_visited.keys()))                  # number of visited links
-            print("Number of dead links: ", len(dead_links))                             # number of dead links
-        else:
-            geturls(url, domain_name, crawl)
+        try: 
+            url = url_queue.pop()
+            if len(url_queue) == 0:
+                print("\n\n******************* Finished crawling all links and sublinks *******************")
+                print("Number of visited links: ", len(url_visited.keys()))                  # number of visited links
+                print("Number of dead links: ", len(dead_links))                             # number of dead links
+            else:
+                geturls(url, domain_name, crawl)
+        except Exception as err:
+            print ("Error occurred during popping queue of websites:", err)
+    else:
+        print("\n\n******************* Finished crawling all links and sublinks *******************")
+        print("Number of visited links: ", len(url_visited.keys()))                  # number of visited links
+        print("Number of dead links: ", len(dead_links))                             # number of dead links
 
-  # if is dead link, return True and write to file
 
+# if is dead link, return True
 def is_dead_link(link: str) -> bool:
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'}  
@@ -199,12 +217,18 @@ def process_stdin(stdin, option):
 #Function that receive a list of websites and process them.
 def process_lwebsites(input_file, given_url, crawl):
     print("Input file: ", input_file)
+    print("Given url: ", given_url)
+    print("Crawl:  ", crawl)
+
     with open(input_file, "r") as f:
         info = f.readlines()
         for url in info:
+            print("Processing url: ", url)
             domain_name = urlparse(url).netloc
-            print("Normal website to test: ", domain_name)
-            geturls(given_url, domain_name, 1)
+            if "localhost" in url:
+                geturls(given_url, domain_name, 0)
+            else:
+                geturls(url, domain_name, 1)
 
 #Function that prints a message and exit of the application
 def printandexit(message):
@@ -239,6 +263,7 @@ def main(argv):
     fselect : bool = 0
     stdin : bool = 0
     given_url : str = "http://localhost"
+    
     for opt, arg in opts:
 
         if opt == '-h':                         # help message
@@ -249,6 +274,7 @@ def main(argv):
                 crawl = 1
             if arg == "off":
                 crawl = 0
+    
         elif opt in ("-f", "--file"):             # File path to parse
             fselect = 1
             crawl = 0                             # There is no crawling here, since there is no domain
@@ -256,39 +282,30 @@ def main(argv):
             fname = ntpath.basename(arg)
             try:
                 dst = node_path + "index.html"
-                copyfile(arg, dst)              #DONE but we have to test with the node server
+                copyfile(arg, dst)                  # TODO - we have to test with the node server
             except IOError:
                 print("Please choose a valid file path")
                 sys.exit()
+    
         elif opt in ("-u", "--url"):                 # url to crawl, decide whether it's a normal website or localhost
             urlselected = 1
             given_url = arg
-            print("URL to crawl: ", given_url)
-            #if "localhost" in given_url:
-                # domain_name = "http://localhost:"
-                # given_url = domain_name + str(port)
-                # print("Give url: ", given_url)
-                # geturls(given_url, domain_name, crawl)
-            #else:
             domain_name = urlparse(given_url).netloc
             print("Normal website to test: ", domain_name)
+       
         elif opt in ("-S", "--Stdin"):
             print("")
             stdin = 1
+       
         elif opt in ("-w", "--lwebsite"):
-            print("TODO: List of websites")         # TODO
+            print("TODO: List of websites")         
             print("arg: ", arg)
             input_file = arg
             lwebsite = 1
-#            print("Input file: ", input_file)
-#            with open(input_file, "r") as f:
-#                info = f.readlines()
-#                for url in info:
-#                    domain_name = urlparse(url).netloc
-#                    print("Normal website to test: ", domain_name)
-#                    geturls(given_url, domain_name, crawl)
+
         elif opt in ("-l", "--lfiles"):
-            print("TODO: List of files")            # TODO
+            print("TODO: List of files")                    # TODO Function   
+       
         else:
             print("Parameter not recognized: %s !\n" % opt)
             print(help_message)
@@ -301,24 +318,25 @@ def main(argv):
 
     if lwebsite == 1:
         crawl = 0
-        process_lwebsites(input_file, given_url, crawl)
-    if fselect == 1:
+        process_lwebsites(input_file, given_url, crawl)          # TODO Confirm: It's not always localhost, can be a list of normal websites. So, we cannot decide crawl and given url here. Treating that inside the function. File with list of normal websites: NOT OK / File with 1 localhost : TODO
+    
+    if fselect == 1:                                            # TODO Confirm: Always localhost? Can it be any html file anywhere? Didnt test yet
         domain_name = "http://localhost:"
         given_url = domain_name + str(port)
-        crawl = 0
+        crawl = 0                                               # TODO FUNCTION
+    
     if stdin == 1:
         domain_name = "http://localhost:3000/"
         given_url = domain_name + str(port)
         crawl = 0
         option= "stdin_file"
         process_stdin(sys.stdin, option)
-    if urlselected == 1:
-        geturls(given_url, domain_name, crawl)
-#    filename = os.fsdecode(currentPath)
-#    print(filename)
-#    if filename and allowed_file(filename):
-#    else:
-#        pass
+    
+    if urlselected == 1:                                # TODO Confirm: for localhost to work better with link validations in the other functions, it's better to pass the port in the url. Here it's working like this. Otherwise, it fails somewhere. time python3 scrapper.py -u http://localhost:3000
+        if "localhost" not in given_url:
+            geturls(given_url, domain_name, 1)          # TODO Confirm: the url can be a localhost too....      # TESTED: URL OK
+        else:
+            geturls(given_url, given_url, 0)                                                                    # TESTED: LOCALHOST OK. PROBLEM - CONFIRM: When balthazar website is in localhost, it doesnt find dead links... maybe because we dont crawl?
 
 if __name__ == "__main__":
     main(sys.argv[1:])
