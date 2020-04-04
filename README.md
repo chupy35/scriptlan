@@ -26,12 +26,17 @@ Obs:
 If you would like to run only the scrapper, you can run only the python script as described below.
 
 ```
-    python3 scrapper.py 
-    -u, --url = url to crawl 
-    -c, --crawl [on/off]  = turn on or off crawl, default=on 
-    -f, --file [filepath] = a file path to parse, crawling deactivated in this option  
-    -l --lfiles = list of files to parse (each line of the file must be a different file), crawling deactivated in this option  
-    -w --lwebsite = list of websites to check (each line of the file must be a different website). If localhost, the crawling is deactivated in this option.
+      A Link Scrapper in Python 
+
+ Usage: python scrapper.py [option] [argument] 
+
+ -u, --url = url to crawl 
+ -c, --crawl [on/off]  = turn on or off crawl, default=on 
+ -f, --file [filepath] = a file path to parse, crawling deactivated in this option  
+ -l --lfiles = list of files to parse (each line of the file must be a different file) 
+ -w --lwebsite = list of websites to check (each line of the file must be a different website), crawling deactivated in this option. If localhost, the crawling is deactivated in this option
+ -S --stdin [option] for accept stdin input. Available options are: "f" to pipe the content of an html file,  "p" for a list of files, with "w" a list of websites, example: "cat listofwebsites.txt | python scrapper.py -S w"
+ 
 ```
 
 Obs:
