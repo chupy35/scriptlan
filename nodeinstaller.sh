@@ -6,11 +6,11 @@
 #	- le script bash doit partir le serveur node localement (npm start) en spécifiant le port (la variable d'environnement se nomme PORT)
 # - le script bash doit exécuter votre programme sur le serveur node local (http://localhost) en vérifiant le bon port.
 # - provided link: https://github.com/stevenvachon/broken-link-checker.git
-# - a link can run npm start https://github.com/tjmonsi/simple-node-server.git
+# - a link can run npm start https://github.com/johntango/npmExpress.git
 
 github=""
 # we provide an error port at the beginning
-port=65536
+port=
 
 help_msg="nodeinstaller.sh -g [github repository] -p [port]"
 #lack_git_url_msg="please use nodeinstaller.sh -g [url] to specify a git repository"
@@ -43,7 +43,7 @@ process_git() {
     cd "$repo_folder"
     npm install
     npm start -- --port $2 &
-    sleep 2
+    sleep 5
 
     # run python script
     cd ..
@@ -54,20 +54,23 @@ process_git() {
 
 
 process_normal() {
-#    echo "$all_arguments"
+  # install python dependency
+    pip3 install -r requirements.txt
+    echo "-----------------"
+    echo $all_arguments
+    echo "-----------------"
     # prepare crawl
     if is_argument_appear "-c" || is_argument_appear "--crawl"
     then
-      echo "crawel provided"
+       # run python script
+       python3 "scrapper.py" $all_arguments
     else
-      all_arguments=("$all_arguments -c on")
+       # run python script
+       python3 "scrapper.py" $all_arguments -c on
     fi
 
-    echo "$all_arguments"
-    # install python dependency
-    pip3 install -r requirements.txt
-    # run python script
-    python3 "scrapper.py" "$all_arguments"
+
+
 }
 
 # make the error message shown in red color
