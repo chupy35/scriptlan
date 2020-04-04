@@ -12,7 +12,6 @@ github=""
 # we provide an error port at the beginning
 port=65536
 
-
 help_msg="nodeinstaller.sh -g [github repository] -p [port]"
 #lack_git_url_msg="please use nodeinstaller.sh -g [url] to specify a git repository"
 no_argument_msg="no argument provided"
@@ -21,7 +20,8 @@ lack_valid_url_msg="please provide a valid git url"
 lack_valid_port_msg="please provide a valid port"
 
 
-process_petition() {
+process_git() {
+
     echo "git url: $1, port: $2"
 #    # install python dependency
     pip3 install -r requirements.txt
@@ -52,22 +52,41 @@ process_petition() {
 #    wait
 }
 
+
+process_normal() {
+#    echo "$all_arguments"
+    # prepare crawl
+    if is_argument_appear "-c" || is_argument_appear "--crawl"
+    then
+      echo "crawel provided"
+    else
+      all_arguments=("$all_arguments -c on")
+    fi
+
+    echo "$all_arguments"
+    # install python dependency
+    pip3 install -r requirements.txt
+    # run python script
+    python3 "scrapper.py" "$all_arguments"
+}
+
 # make the error message shown in red color
 echo_err() {
   echo -e "\033[1;31m ERROR! "$1" \033[0m"
   echo "$help_msg"
 }
 
-## is git url provided from arguments
-is_git_url_provided() {
-  if [ "$1" == ""  ]
+
+## check if specific arguments appear
+is_argument_appear() {
+  if [[ " ${all_arguments[@]} " =~ " $1 " ]]
   then
-    echo_err "$lack_git_url_msg"
-    return 1
-  else
     return 0
+  else
+    return 1
   fi
 }
+
 
 
 # std:err append to std:out
@@ -116,68 +135,42 @@ has_arguments() {
 }
 
 
-previous_argument=""
-is_help_needed=1
+# get all arguments
+all_arguments="$@"
 
+# parse params
 if has_arguments $#
 then
-  for arg in "$@"
-  do
+  while [[ "$#" > 0 ]]; do case $1 in
+    -h|--help) break ; shift;shift;;
+    -g|--git) github="$2";shift;shift;;
+    -p|--port) port="$2";shift;shift;;
+    *) shift; shift;;
+  esac; done
 
-    if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]
-    then
-      previous_argument="help"
-      is_help_needed=0
-    fi
-
-    if [ "$arg" == "--git" ] || [ "$arg" == "-g" ]
-    then
-       previous_argument="git"
-    else
-      if [ "$previous_argument" == "git" ] && [ "$arg" != "" ]
-      then
-        previous_argument=""
-        github="$arg"
-      fi
-    fi
-
-    if [ "$arg" == "--port" ] || [ "$arg" == "-p" ]
-    then
-       previous_argument="port"
-    else
-      if [ "$previous_argument" == "port" ] && [ "$arg" != "" ]
-      then
-        previous_argument=""
-        port="$arg"
-      fi
-    fi
-
-  done
-
-#  echo "----------"
-#  echo "github::: $github"
-#  echo "port::: $port"
-#  echo "----------"
-
-  if [ $is_help_needed == 0 ]
+  echo "$all_arguments"
+  # if help needed,
+  if is_argument_appear "-h" || is_argument_appear "--help"
   then
     echo "$help_msg"
+  # if help not needed
   else
-    if is_git_url_provided "$github"
+    # if -g or --git appears in arguments
+    if is_argument_appear "-g" || is_argument_appear "--git"
     then
+      echo "github: $github, port: $port"
       if is_valid_git_url "$github"
       then
         if is_valid_port "$port"
         then
           echo "correct~~~ github: $github, correct~~~ port: $port"
-          process_petition "$github" "$port"
+          process_git "$github" "$port"
         fi
       fi
+    # if no git url provided
+    # pass all the arguments to python script
+    else
+      process_normal
     fi
   fi
-
 fi
-
-
-
-
