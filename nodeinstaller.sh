@@ -52,26 +52,26 @@ process_git() {
 #    wait
 }
 
-
-process_normal() {
-  # install python dependency
-    pip3 install -r requirements.txt
-    echo "-----------------"
-    echo $all_arguments
-    echo "-----------------"
-    # prepare crawl
-    if is_argument_appear "-c" || is_argument_appear "--crawl"
-    then
-       # run python script
-       python3 "scrapper.py" $all_arguments
-    else
-       # run python script
-       python3 "scrapper.py" $all_arguments -c on
-    fi
-
-
-
-}
+#
+#process_normal() {
+#  # install python dependency
+#    pip3 install -r requirements.txt
+#    echo "-----------------"
+#    echo $all_arguments
+#    echo "-----------------"
+#    # prepare crawl
+#    if is_argument_appear "-c" || is_argument_appear "--crawl"
+#    then
+#       # run python script
+#       python3 "scrapper.py" $all_arguments
+#    else
+#       # run python script
+#       python3 "scrapper.py" $all_arguments -c on
+#    fi
+#
+#
+#
+#}
 
 # make the error message shown in red color
 echo_err() {
@@ -172,8 +172,8 @@ then
       fi
     # if no git url provided
     # pass all the arguments to python script
-    else
-      process_normal
+#    else
+#      process_normal
     fi
   fi
 fi
